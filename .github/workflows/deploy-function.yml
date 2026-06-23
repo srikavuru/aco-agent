@@ -25,3 +25,4 @@ jobs:
           package: aco-agent
           publish-profile: ${{ secrets.AZURE_FUNCTION_PUBLISH_PROFILE }}
           scm-do-build-remote: true
+          enable-oryx-build: true
