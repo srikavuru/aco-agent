@@ -13,13 +13,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy to Azure Static Web Apps
-        uses: Azure/static-web-apps-deploy@v1
+      - name: Build recruiter UI
         env:
           VITE_API_BASE: https://aco-agent-func.azurewebsites.net
+        run: |
+          cd recruiter-ui
+          npm ci
+          npm run build
+
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_SWA_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: upload
-          app_location: recruiter-ui
-          output_location: dist
+          app_location: recruiter-ui/dist
+          skip_app_build: true
