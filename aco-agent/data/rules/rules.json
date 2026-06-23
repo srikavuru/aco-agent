@@ -66,6 +66,61 @@
           "keywords": ["E-Verify", "employment eligibility", "right to work"],
           "failure_message": "E-Verify statement absent. Recommended for federal contractor postings in E-Verify mandatory states.",
           "applicable_regions": ["AZ", "AL", "GA", "NC", "SC", "TN", "UT"]
+        },
+        {
+          "rule_id": "RD-005",
+          "name": "Vertiv Core Principals & Behaviors Block",
+          "required": true,
+          "severity": "CRITICAL",
+          "match_type": "semantic",
+          "semantic_threshold": 0.70,
+          "canonical_text": "Vertiv Core Principals Safety Integrity Respect Teamwork Inclusion High-Performance Culture Customer Focus Operational Excellence Innovation Financial Strength",
+          "allowed_variants": [
+            "Core Principals",
+            "Safety. Integrity. Respect. Teamwork. Inclusion.",
+            "Strategic Priorities",
+            "Own it",
+            "Act with urgency",
+            "Foster a customer-first mindset"
+          ],
+          "failure_message": "Vertiv Core Principals & Behaviors block is missing. All postings must include the Core Principals (Safety, Integrity, Respect, Teamwork, Inclusion), Strategic Priorities, and Vertiv Behaviors section.",
+          "remediation_template": "vertiv_core_principals_block"
+        },
+        {
+          "rule_id": "RD-006",
+          "name": "Vertiv About Us Boilerplate",
+          "required": true,
+          "severity": "HIGH",
+          "match_type": "semantic",
+          "semantic_threshold": 0.72,
+          "canonical_text": "Vertiv NYSE VRT brings together hardware software analytics ongoing services customers vital applications run continuously data centers communication networks power cooling IT infrastructure solutions Westerville Ohio 34000 people 130 countries",
+          "allowed_variants": [
+            "Vertiv (NYSE: VRT)",
+            "Westerville, Ohio",
+            "34,000 people",
+            "130 countries",
+            "Vertiv.com"
+          ],
+          "failure_message": "Vertiv About Us boilerplate is missing or incomplete. Include the standard company description referencing NYSE: VRT, Westerville OH HQ, ~34,000 employees, and 130+ countries.",
+          "remediation_template": "vertiv_about_us_block"
+        },
+        {
+          "rule_id": "RD-007",
+          "name": "Work Authorization & No Sponsorship Statement",
+          "required": true,
+          "severity": "CRITICAL",
+          "match_type": "semantic",
+          "semantic_threshold": 0.75,
+          "canonical_text": "Vertiv will only employ those who are legally authorized to work in the United States. This is not a position for which sponsorship will be provided. Individuals with temporary visas such as E, F-1, H-1, H-2, L, B, J, or TN or who need sponsorship for work authorization now or in the future, are not eligible for hire.",
+          "allowed_variants": [
+            "legally authorized to work in the United States",
+            "not a position for which sponsorship will be provided",
+            "temporary visas",
+            "not eligible for hire",
+            "No calls or agencies please"
+          ],
+          "failure_message": "Work authorization and no-sponsorship statement is missing. Vertiv requires this block on all U.S. postings. Include the full visa exclusion list (E, F-1, H-1, H-2, L, B, J, TN).",
+          "remediation_template": "vertiv_work_auth_block"
         }
       ]
     },
