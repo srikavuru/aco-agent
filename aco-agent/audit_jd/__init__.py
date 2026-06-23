@@ -76,11 +76,17 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             from shared.url_fetcher import fetch_posting
             scraped = fetch_posting(url)
             job_description = scraped["job_description"]
-        except RuntimeError as e:
-            return _error(str(e), 501)
-        except Exception as e:
+        except BaseException as e:
             logger.error("URL fetch failed: %s", e, exc_info=True)
-            return _error(f"Failed to fetch job posting from URL: {e}", 422)
+            msg = str(e)
+            if "playwright" in msg.lower() or "browser" in msg.lower() or isinstance(e, (ImportError, RuntimeError)):
+                return _error(
+                    "URL mode requires Playwright (headless browser) which is not "
+                    "available on this server. Use 'Paste Text' mode instead, or "
+                    "run the audit locally with: func start",
+                    501,
+                )
+            return _error(f"Failed to fetch job posting from URL: {msg}", 422)
 
     if not job_description:
         return _error("job_description or url is required.", 400)
