@@ -1,21 +1,50 @@
 @import "tailwindcss";
 
 @theme {
-  --color-vertiv-red: #E31837;
-  --color-vertiv-dark: #B8132D;
+  --color-vertiv: #E31837;
+  --color-vertiv-hover: #C41230;
   --color-vertiv-light: #FDE8EB;
-  --color-sev-critical: #DC2626;
+  --color-vertiv-bg: #FEF2F2;
+  --color-sev-critical: #E31837;
   --color-sev-critical-bg: #FEF2F2;
-  --color-sev-high: #EA580C;
+  --color-sev-high: #F97316;
   --color-sev-high-bg: #FFF7ED;
-  --color-sev-medium: #D97706;
-  --color-sev-medium-bg: #FFFBEB;
-  --color-sev-low: #2563EB;
-  --color-sev-low-bg: #EFF6FF;
+  --color-sev-medium: #EAB308;
+  --color-sev-medium-bg: #FEFCE8;
+  --color-sev-low: #9CA3AF;
+  --color-sev-low-bg: #F3F4F6;
+  --color-approved: #16A34A;
+  --color-approved-bg: #F0FDF4;
+  --color-surface: #F8F9FA;
   --font-sans: "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
-body {
-  margin: 0;
+body { margin: 0; background: #F8F9FA; }
+
+.field-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #DEE2E6;
+  border-radius: 6px;
+  font-size: 13px;
   background: #fff;
+  color: #212529;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+.field-input:focus {
+  border-color: #E31837;
+  box-shadow: 0 0 0 3px rgba(227,24,55,0.08);
+  border-left: 3px solid #E31837;
+  padding-left: 12px;
+}
+.field-input::placeholder { color: #ADB5BD; }
+.field-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6C757D;
+  margin-bottom: 6px;
 }

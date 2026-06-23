@@ -1,6 +1,13 @@
 import { useState } from 'react'
 import SeverityBadge from './SeverityBadge'
 
+const BORDER_COLORS = {
+  CRITICAL: 'border-l-sev-critical',
+  HIGH: 'border-l-sev-high',
+  MEDIUM: 'border-l-sev-medium',
+  LOW: 'border-l-sev-low',
+}
+
 export default function FindingCard({ finding }) {
   const [copied, setCopied] = useState(false)
 
@@ -14,51 +21,53 @@ export default function FindingCard({ finding }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const borderCls = BORDER_COLORS[finding.severity] || BORDER_COLORS.LOW
+
   return (
-    <div className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
+    <div className={`bg-white rounded-lg shadow-sm border border-gray-200/80 border-l-[3px] ${borderCls} p-4 hover:shadow-md transition-shadow`}>
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-2.5 min-w-0">
           <SeverityBadge severity={finding.severity} />
-          <span className="text-xs font-mono text-gray-400">{finding.rule_id}</span>
-          <span className="text-sm font-medium text-gray-900 truncate">{finding.rule_name}</span>
+          <span className="inline-flex px-2 py-0.5 bg-gray-100 text-[10px] font-mono text-gray-500 rounded">
+            {finding.rule_id}
+          </span>
+          <span className="text-[13px] font-semibold text-gray-900 truncate">{finding.rule_name}</span>
         </div>
-        <span className="text-xs text-gray-400 shrink-0">{finding.match_type}</span>
+        <span className="inline-flex px-2 py-0.5 bg-gray-50 text-[10px] text-gray-400 rounded shrink-0 uppercase tracking-wider">
+          {finding.match_type}
+        </span>
       </div>
 
-      <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+      <p className="mt-2.5 text-[13px] text-gray-600 leading-relaxed">
         {finding.failure_message}
       </p>
 
-      {/* Semantic score detail */}
       {finding.semantic_score != null && (
-        <div className="mt-2 text-xs text-gray-400">
-          Similarity: {finding.semantic_score} / {finding.semantic_threshold} threshold
+        <div className="mt-2 text-[11px] text-gray-400">
+          Similarity: <span className="font-mono">{finding.semantic_score}</span> / <span className="font-mono">{finding.semantic_threshold}</span> threshold
         </div>
       )}
 
-      {/* Matched terms */}
       {finding.matched_terms?.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">
           {finding.matched_terms.map((term, i) => (
-            <span key={i} className="inline-flex px-1.5 py-0.5 bg-red-50 text-red-700 text-xs rounded font-mono">
+            <span key={i} className="inline-flex px-1.5 py-0.5 bg-vertiv-bg text-vertiv text-[11px] rounded font-mono">
               {term}
             </span>
           ))}
         </div>
       )}
 
-      {/* Legal citation */}
       {finding.legal_citation && (
-        <div className="mt-2 text-xs text-gray-400 italic">
+        <div className="mt-2 text-[11px] text-gray-400 italic">
           {finding.legal_citation}
         </div>
       )}
 
-      {/* Remediation copy button */}
       {hasRemediation && remediationText && (
         <button
           onClick={copyRemediation}
-          className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-vertiv-red bg-vertiv-light rounded-md hover:bg-vertiv-red hover:text-white transition-colors"
+          className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-vertiv bg-vertiv-light rounded hover:bg-vertiv hover:text-white transition-colors"
         >
           <ClipboardIcon />
           {copied ? 'Copied!' : 'Copy Remediation Language'}

@@ -33,6 +33,7 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [history, setHistory] = useState([])
+  const [scrapedMeta, setScrapedMeta] = useState(null)
 
   async function handleSubmit(payload) {
     setLoading(true)
@@ -51,6 +52,7 @@ export default function App() {
       }
       setResult(data)
       setHistory((prev) => [data, ...prev].slice(0, 10))
+      if (data._scraped) setScrapedMeta(data._scraped)
     } catch (err) {
       setError('Cannot reach audit server. Is func start running on :7071?')
     } finally {
@@ -64,25 +66,36 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="border-b border-gray-200 bg-white sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center gap-3">
-          <div className="w-8 h-8 rounded bg-vertiv-red flex items-center justify-center">
-            <span className="text-white font-bold text-sm">V</span>
+    <div className="min-h-screen bg-surface flex flex-col">
+      {/* Top accent bar */}
+      <div className="h-1 bg-vertiv shrink-0" />
+
+      {/* Header */}
+      <header className="bg-vertiv sticky top-0 z-10 shadow-md">
+        <div className="max-w-[900px] mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center">
+              <span className="text-white font-bold text-lg leading-none">V</span>
+            </div>
+            <div>
+              <h1 className="text-[15px] font-bold text-white leading-tight tracking-wide">ACO Agent</h1>
+              <p className="text-[11px] text-white/60">Automated Compliance Auditor</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900 leading-tight">ACO Agent</h1>
-            <p className="text-xs text-gray-500">Automated Compliance Auditor</p>
+          <div className="border border-white/30 rounded-full px-3 py-1">
+            <span className="text-[10px] text-white/80 uppercase tracking-widest font-medium">Decision Support Only</span>
           </div>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8">
+      {/* Main */}
+      <main className="flex-1 max-w-[900px] w-full mx-auto px-6 py-6">
         <AuditForm
           regions={REGIONS}
           roleTypes={ROLE_TYPES}
           onSubmit={handleSubmit}
           loading={loading}
+          scrapedMeta={scrapedMeta}
         />
 
         {history.length > 0 && (
@@ -94,7 +107,7 @@ export default function App() {
         )}
 
         {error && (
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          <div className="mt-5 px-4 py-3 bg-vertiv-bg border-l-4 border-vertiv rounded-r-lg text-[13px] text-vertiv font-medium">
             {error}
           </div>
         )}
@@ -102,9 +115,10 @@ export default function App() {
         {result && <AuditResult certificate={result} />}
       </main>
 
-      <footer className="border-t border-gray-200 mt-auto">
-        <div className="max-w-5xl mx-auto px-6 py-4 text-xs text-gray-400 text-center">
-          Decision support only — all publish decisions are human-owned.
+      {/* Footer */}
+      <footer className="border-t border-gray-200 bg-white mt-auto">
+        <div className="max-w-[900px] mx-auto px-6 py-3 text-[11px] text-gray-400 text-center uppercase tracking-wide">
+          Decision support only — all publish decisions are human-owned
         </div>
       </footer>
     </div>
