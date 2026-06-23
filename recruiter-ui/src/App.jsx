@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import AuditForm from './components/AuditForm'
 import AuditResult from './components/AuditResult'
+import AuditHistory from './components/AuditHistory'
 
 const REGIONS = [
   { value: 'OH', label: 'Ohio' },
@@ -31,6 +32,7 @@ export default function App() {
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [history, setHistory] = useState([])
 
   async function handleSubmit(payload) {
     setLoading(true)
@@ -48,11 +50,17 @@ export default function App() {
         return
       }
       setResult(data)
+      setHistory((prev) => [data, ...prev].slice(0, 10))
     } catch (err) {
       setError('Cannot reach audit server. Is func start running on :7071?')
     } finally {
       setLoading(false)
     }
+  }
+
+  function handleHistorySelect(cert) {
+    setResult(cert)
+    setError(null)
   }
 
   return (
@@ -76,6 +84,14 @@ export default function App() {
           onSubmit={handleSubmit}
           loading={loading}
         />
+
+        {history.length > 0 && (
+          <AuditHistory
+            history={history}
+            activeId={result?.audit_id}
+            onSelect={handleHistorySelect}
+          />
+        )}
 
         {error && (
           <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">

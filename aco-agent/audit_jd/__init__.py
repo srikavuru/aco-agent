@@ -84,11 +84,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         findings=findings,
         rules_schema_version=RULES.get("schema_version", "unknown"),
         req_number=req_number,
+        rules_evaluated=engine.rules_evaluated,
     )
-
-    status_code = 200
-    if certificate["audit_result"]["overall_status"] in ("BLOCKED", "REVIEW_REQUIRED"):
-        status_code = 200  # Still 200 — the blocking decision is human-owned, not the API's
 
     logger.info(
         "Audit complete: %s | Status: %s | Critical: %d | High: %d",
@@ -100,7 +97,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     return func.HttpResponse(
         json.dumps(certificate, indent=2, ensure_ascii=False),
-        status_code=status_code,
+        status_code=200,
         mimetype="application/json"
     )
 

@@ -53,8 +53,21 @@ Vertiv will not discharge or in any other manner discriminate against employees
 or applicants because they have inquired about, discussed, or disclosed their 
 own pay or the pay of another employee or applicant.
 
-This position may be subject to U.S. export control requirements (ITAR/EAR). 
+This position may be subject to U.S. export control requirements (ITAR/EAR).
 Persons hired may need to qualify as a U.S. Person.
+
+Vertiv will only employ those who are legally authorized to work in the
+United States. This is not a position for which sponsorship will be provided.
+Individuals with temporary visas such as E, F-1, H-1, H-2, L, B, J, or TN
+or who need sponsorship for work authorization now or in the future, are not
+eligible for hire.
+
+Core Principals: Safety. Integrity. Respect. Teamwork. Inclusion.
+
+About Vertiv: Vertiv (NYSE: VRT) brings together hardware, software, analytics
+and ongoing services to enable customers' vital applications to run continuously.
+Headquartered in Westerville, Ohio, Vertiv employs around 34,000 people and does
+business in more than 130 countries. Visit Vertiv.com.
 """
 
 NON_COMPLIANT_JD_CRITICAL = """

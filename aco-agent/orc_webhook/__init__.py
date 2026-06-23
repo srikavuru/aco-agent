@@ -122,6 +122,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         findings=findings,
         rules_schema_version=RULES.get("schema_version", "unknown"),
         req_number=req_number,
+        rules_evaluated=engine.rules_evaluated,
     )
 
     logger.info(

@@ -76,10 +76,37 @@ function ClipboardIcon() {
   )
 }
 
-const REMEDIATION_TEMPLATES = {
+export const REMEDIATION_TEMPLATES = {
   vertiv_eeo_block_v3: `Vertiv is an Equal Opportunity/Affirmative Action employer. We promote equal opportunity for all applicants regardless of race, color, religion, sex, national origin, age, disability, veteran status, or other protected characteristics.
 
 Vertiv will make reasonable accommodations for qualified individuals with disabilities. If you need accommodation during the application or hiring process, please contact HR at accommodations@vertiv.com.
 
 Vertiv will not discharge or in any other manner discriminate against employees or applicants because they have inquired about, discussed, or disclosed their own pay or the pay of another employee or applicant.`,
+
+  vertiv_core_principals_block: `The successful candidate will embrace Vertiv's Core Principals & Behaviors to help execute our Strategic Priorities.
+
+OUR CORE PRINCIPALS: Safety. Integrity. Respect. Teamwork. Inclusion.
+
+OUR STRATEGIC PRIORITIES
+• High-Performance Culture
+• Customer Focus
+• Operational Excellence
+• Innovation
+• Financial Strength
+
+VERTIV BEHAVIORS
+• Own it
+• Act with urgency
+• Foster a customer-first mindset
+• Think big and execute
+• Lead by example
+• Drive continuous improvement
+• Learn and seek out development
+• Promote transparent & open communication`,
+
+  vertiv_about_us_block: `About Vertiv
+Vertiv (NYSE: VRT) brings together hardware, software, analytics and ongoing services to enable its customers' vital applications to run continuously, perform optimally and grow with their business needs. Vertiv solves the most important challenges facing today's data centers, communication networks and commercial and industrial facilities with a portfolio of power, cooling and IT infrastructure solutions and services that extend from the cloud to the edge of the network. Headquartered in Westerville, Ohio, USA, Vertiv employs around 34,000 people and does business in more than 130 countries. Visit Vertiv.com to learn more.`,
+
+  vertiv_work_auth_block: `Work Authorization
+No calls or agencies please. Vertiv will only employ those who are legally authorized to work in the United States. This is not a position for which sponsorship will be provided. Individuals with temporary visas such as E, F-1, H-1, H-2, L, B, J, or TN or who need sponsorship for work authorization now or in the future, are not eligible for hire.`,
 }

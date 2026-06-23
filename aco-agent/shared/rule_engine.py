@@ -44,6 +44,7 @@ class RuleEngine:
         self.role_type = role_type.lower()
         self.semantic = SemanticMatcher()
         self._findings: list[Finding] = []
+        self.rules_evaluated: int = 0
 
     def run(self, job_description: str) -> list[dict]:
         """
@@ -52,9 +53,11 @@ class RuleEngine:
         """
         jd_lower = job_description.lower()
         self._findings = []
+        self.rules_evaluated = 0
 
         for category_key, category_data in self.rules.get("rule_categories", {}).items():
             for rule in category_data.get("rules", []):
+                self.rules_evaluated += 1
                 finding = self._evaluate_rule(rule, job_description, jd_lower, category_key)
                 if finding:
                     self._findings.append(finding)

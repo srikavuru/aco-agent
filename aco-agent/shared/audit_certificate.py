@@ -44,6 +44,7 @@ def build_certificate(
     findings: list[dict[str, Any]],
     rules_schema_version: str,
     req_number: str = "",
+    rules_evaluated: int = 0,
 ) -> dict[str, Any]:
     """
     Builds the full Audit Certificate from audit metadata + engine findings.
@@ -94,6 +95,7 @@ def build_certificate(
             "action_required": action_required,
             "counts": counts,
             "total_findings": len(findings),
+            "rules_evaluated": rules_evaluated,
             "publish_recommendation": _publish_recommendation(overall_status),
             "escalation_note": _escalation_note(overall_status, critical_findings)
         },
