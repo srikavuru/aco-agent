@@ -26,7 +26,7 @@ const ROLE_TYPES = [
   { value: 'general', label: 'General / Other' },
 ]
 
-const API_BASE = import.meta.env.VITE_API_BASE || ''
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://aco-agent-func.azurewebsites.net'
 
 export default function App() {
   const [result, setResult] = useState(null)
@@ -54,7 +54,7 @@ export default function App() {
       setHistory((prev) => [data, ...prev].slice(0, 10))
       if (data._scraped) setScrapedMeta(data._scraped)
     } catch (err) {
-      setError('Cannot reach audit server. Is func start running on :7071?')
+      setError('Cannot reach audit server. Check your network connection or try again.')
     } finally {
       setLoading(false)
     }
