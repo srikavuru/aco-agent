@@ -25,6 +25,8 @@ const ROLE_TYPES = [
   { value: 'general', label: 'General / Other' },
 ]
 
+const API_BASE = import.meta.env.VITE_API_BASE || ''
+
 export default function App() {
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -35,7 +37,7 @@ export default function App() {
     setError(null)
     setResult(null)
     try {
-      const res = await fetch('/api/audit', {
+      const res = await fetch(`${API_BASE}/api/audit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
