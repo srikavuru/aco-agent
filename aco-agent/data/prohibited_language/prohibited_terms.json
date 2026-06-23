@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Flat lookup library of prohibited/flagged terms. Canonical source — rules.json pulls from here.",
+  "categories": {
+    "age_bias": {
+      "severity": "CRITICAL",
+      "terms": [
+        "young professional", "recent graduate", "digital native", "youthful",
+        "new to the workforce", "energetic team", "young team", "fresh perspective",
+        "startup energy", "vibrant", "dynamic young", "early career only"
+      ]
+    },
+    "gender_coded_masculine": {
+      "severity": "HIGH",
+      "terms": [
+        "rockstar", "ninja", "guru", "dominate", "crush it", "aggressive",
+        "kill it", "manpower", "man-hours", "man up", "brotherhood",
+        "gentlemen", "chairman", "manmade", "workman"
+      ]
+    },
+    "disability_insensitive": {
+      "severity": "HIGH",
+      "terms": [
+        "able-bodied", "physically fit", "no disabilities", "must be mobile",
+        "physically demanding (no accommodation)", "healthy"
+      ]
+    },
+    "national_origin": {
+      "severity": "CRITICAL",
+      "terms": [
+        "U.S. citizen only", "citizens only", "must be a U.S. citizen",
+        "no foreign nationals", "green card required"
+      ]
+    },
+    "religion": {
+      "severity": "CRITICAL",
+      "terms": [
+        "Christian values", "faith-based environment", "must share our religious beliefs"
+      ]
+    },
+    "brand_risk": {
+      "severity": "MEDIUM",
+      "terms": [
+        "Eaton", "Schneider Electric", "Emerson Network Power", "ABB", "Siemens Energy",
+        "better than", "unlike competitors", "industry-leading unlike others"
+      ]
+    },
+    "vague_compensation_mandatory_states": {
+      "severity": "HIGH",
+      "terms": [
+        "competitive salary", "market rate", "based on experience",
+        "DOE", "TBD", "salary commensurate", "to be determined",
+        "we pay competitively"
+      ],
+      "note": "Severity escalates to CRITICAL in ST-required states."
+    }
+  }
+}

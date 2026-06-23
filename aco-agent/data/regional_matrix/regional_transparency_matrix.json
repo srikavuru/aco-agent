@@ -1,0 +1,101 @@
+{
+  "schema_version": "1.0.0",
+  "description": "State and locality salary/labor law transparency requirements. Source of truth for ST-* rules.",
+  "last_reviewed": "2024-01-01",
+  "legal_counsel_contact": "legal-compliance@vertiv.com",
+
+  "states": {
+    "CA": {
+      "name": "California",
+      "pay_range_required": true,
+      "effective_date": "2023-01-01",
+      "law": "CA Labor Code § 432.3 (SB 1162)",
+      "notes": "Pay range required in ALL job postings, including remote roles that could be performed in CA. Benefits summary not required but recommended.",
+      "locality_overrides": {}
+    },
+    "CO": {
+      "name": "Colorado",
+      "pay_range_required": true,
+      "benefits_required": true,
+      "effective_date": "2021-01-01",
+      "law": "CO SB21-085 (Equal Pay for Equal Work Act)",
+      "notes": "Pay range AND benefits summary required. Applies to all remote roles that can be performed in CO. 'Nationwide except CO' exclusions are no longer compliant as of 2022.",
+      "locality_overrides": {}
+    },
+    "NY": {
+      "name": "New York",
+      "pay_range_required": true,
+      "effective_date": "2023-09-17",
+      "law": "NY Labor Law § 194-b",
+      "notes": "Pay range required for jobs to be performed in NY or where the employer reasonably expects the applicant pool to include NY residents.",
+      "locality_overrides": {
+        "NYC": {
+          "name": "New York City",
+          "effective_date": "2022-11-01",
+          "law": "NYC Local Law 32 of 2022",
+          "notes": "NYC enacted pay transparency earlier than the state. Same standard applies."
+        }
+      }
+    },
+    "WA": {
+      "name": "Washington",
+      "pay_range_required": true,
+      "benefits_required": true,
+      "effective_date": "2023-01-01",
+      "law": "WA SB 5761",
+      "notes": "Pay range AND general benefits description required for postings with 15+ employees. Remote-eligible roles covered.",
+      "locality_overrides": {}
+    },
+    "IL": {
+      "name": "Illinois",
+      "pay_range_required": true,
+      "effective_date": "2025-01-01",
+      "law": "IL HB 3129",
+      "notes": "Effective January 1, 2025 for employers with 15+ employees.",
+      "locality_overrides": {
+        "Chicago": {
+          "name": "Chicago",
+          "effective_date": "2024-07-01",
+          "law": "Chicago Pay Transparency Ordinance",
+          "notes": "Chicago enacted earlier. Same pay range requirement."
+        }
+      }
+    },
+    "MA": {
+      "name": "Massachusetts",
+      "pay_range_required": true,
+      "effective_date": "2025-07-31",
+      "law": "MA Pay Transparency Act (H.4109)",
+      "notes": "Effective July 31, 2025 for employers with 25+ employees.",
+      "locality_overrides": {}
+    },
+    "NJ": {
+      "name": "New Jersey",
+      "pay_range_required": true,
+      "effective_date": "2024-06-01",
+      "law": "NJ Pay Transparency Act",
+      "notes": "Effective June 1, 2024 for employers with 10+ employees.",
+      "locality_overrides": {}
+    },
+    "CT": {
+      "name": "Connecticut",
+      "pay_range_required": true,
+      "effective_date": "2021-10-01",
+      "law": "CT PA 21-30",
+      "notes": "Range required upon request AND must be provided proactively in job postings as of Oct 2021.",
+      "locality_overrides": {}
+    },
+    "OH": {
+      "name": "Ohio",
+      "pay_range_required": false,
+      "notes": "No state-level pay transparency law as of 2024. Federal rules apply. Monitor for Columbus/Cincinnati local ordinance activity.",
+      "locality_overrides": {}
+    }
+  },
+
+  "e_verify_mandatory_states": ["AZ", "AL", "GA", "MS", "NC", "SC", "TN", "UT", "LA"],
+
+  "at_will_exceptions": {
+    "MT": "Montana has just-cause termination protection — avoid language implying at-will status."
+  }
+}

@@ -1,0 +1,47 @@
+GOLDEN TEMPLATE — Senior Electrical Engineer (Data Center Infrastructure)
+STATUS: APPROVED FOR DISTRIBUTION | Compliance Reviewed: 2024-01-01
+APPROVED REGIONS: All U.S. (includes salary range for CO/CA/NY/WA compliance)
+
+---
+
+About Vertiv
+Vertiv designs, builds and services critical infrastructure that enables vital applications for data centers, communication networks, and commercial and industrial facilities. Our portfolio of power, cooling and IT infrastructure solutions and services enables business continuity for our customers and protects people and the environment through projects and initiatives like the Vertiv Foundation and ESG commitments.
+
+Role Summary
+We are seeking a Senior Electrical Engineer to join our OneCore engineering team in Columbus, OH. In this role, you will own the design, validation, and technical documentation for AC power distribution equipment supporting hyperscale and enterprise data center deployments globally.
+
+What You'll Do
+- Lead electrical design of switchgear, PDUs, and UPS systems (Juice Box / SmartRun product lines)
+- Own DFMEA and design validation protocols through FAT (Factory Acceptance Testing)
+- Collaborate cross-functionally with Thermal (DLC/CDU), Controls (BMS), and Software teams
+- Support technical sales and customer on-site commissioning globally
+- Mentor junior engineers and review design documentation packages
+
+What We're Looking For
+Required:
+- Bachelor's degree in Electrical Engineering (BSEE) or equivalent
+- 5+ years of experience in power distribution, UPS, or switchgear design
+- Proficiency in AutoCAD Electrical, SPICE simulation tools
+- Strong understanding of NEC, UL 891, IEC 61439 standards
+
+Preferred:
+- PE license or actively pursuing
+- Experience with hyperscale data center power architectures (N+1, 2N)
+- Background at feeder companies: Johnson Controls, Carrier, Eaton power division (internal: exclude "Eaton" before publishing)
+
+Compensation
+Annual salary range: $105,000 – $130,000 USD. Final offer commensurate with experience, skills, and location. This range applies to Columbus, OH and equivalent cost-of-labor markets.
+
+Benefits include: medical, dental, and vision insurance; 401(k) with company match; paid time off (PTO); paid parental leave; employee stock purchase plan; tuition reimbursement.
+
+---
+
+Vertiv is an Equal Opportunity/Affirmative Action employer. We promote equal opportunity for all applicants regardless of race, color, religion, sex, national origin, age, disability, veteran status, or any other characteristic protected by applicable law.
+
+Vertiv will make reasonable accommodations for qualified individuals with disabilities. If you require accommodation during the application or interview process, please contact Human Resources.
+
+Vertiv will not discharge or in any other manner discriminate against employees or applicants because they have inquired about, discussed, or disclosed their own pay or the pay of another employee or applicant (Pay Transparency Non-Discrimination Provision — 41 CFR 60-1.35).
+
+Vertiv participates in E-Verify. For more information, visit https://www.e-verify.gov.
+
+This position may be subject to U.S. export control requirements under the Export Administration Regulations (EAR) and/or the International Traffic in Arms Regulations (ITAR). Persons hired for this role may need to meet applicable eligibility requirements as a "U.S. Person" under these regulations.

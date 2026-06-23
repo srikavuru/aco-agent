@@ -1,0 +1,269 @@
+{
+  "schema_version": "1.0.0",
+  "last_updated": "2024-01-01",
+  "maintained_by": "Legal / HR Compliance",
+  "rule_categories": {
+
+    "REQUIRED_DISCLAIMERS": {
+      "description": "Legally mandated statements that must appear verbatim or semantically equivalent in every posting.",
+      "severity": "CRITICAL",
+      "rules": [
+        {
+          "rule_id": "RD-001",
+          "name": "EEO Statement",
+          "required": true,
+          "severity": "CRITICAL",
+          "match_type": "semantic",
+          "semantic_threshold": 0.82,
+          "canonical_text": "Vertiv is an Equal Opportunity/Affirmative Action employer. We promote equal opportunity for all applicants regardless of race, color, religion, sex, national origin, age, disability, veteran status, or other protected characteristics.",
+          "allowed_variants": [
+            "Equal Opportunity Employer",
+            "EOE",
+            "We are an equal opportunity employer and all qualified applicants will receive consideration for employment without regard to race, color, religion, sex, national origin, disability status, protected veteran status, or any other characteristic protected by law."
+          ],
+          "failure_message": "EEO statement is missing or does not meet minimum semantic equivalency threshold. This is a federal legal requirement (Title VII, ADEA, ADA). Add the approved Vertiv EEO block before publishing.",
+          "remediation_template": "vertiv_eeo_block_v3",
+          "legal_citation": "Title VII of the Civil Rights Act of 1964; 41 CFR 60-1.4"
+        },
+        {
+          "rule_id": "RD-002",
+          "name": "Reasonable Accommodation Statement",
+          "required": true,
+          "severity": "CRITICAL",
+          "match_type": "semantic",
+          "semantic_threshold": 0.75,
+          "canonical_text": "Vertiv will make reasonable accommodations for qualified individuals with disabilities. If you need accommodation during the application or hiring process, please contact HR.",
+          "allowed_variants": [
+            "reasonable accommodation",
+            "disability accommodation",
+            "contact us if you need accommodation"
+          ],
+          "failure_message": "No reasonable accommodation language detected. Required under ADA for all U.S. postings.",
+          "legal_citation": "Americans with Disabilities Act, 42 U.S.C. § 12112"
+        },
+        {
+          "rule_id": "RD-003",
+          "name": "Pay Transparency Non-Discrimination Statement",
+          "required": true,
+          "severity": "HIGH",
+          "match_type": "semantic",
+          "semantic_threshold": 0.70,
+          "canonical_text": "Vertiv will not discharge or in any other manner discriminate against employees or applicants because they have inquired about, discussed, or disclosed their own pay or the pay of another employee or applicant.",
+          "allowed_variants": [
+            "pay transparency",
+            "salary discussion",
+            "compensation discussion"
+          ],
+          "failure_message": "Pay transparency non-discrimination notice missing. Required under Executive Order 13665 for federal contractors.",
+          "legal_citation": "Executive Order 13665; 41 CFR 60-1.35"
+        },
+        {
+          "rule_id": "RD-004",
+          "name": "E-Verify Participation Statement",
+          "required": false,
+          "severity": "MEDIUM",
+          "match_type": "keyword",
+          "keywords": ["E-Verify", "employment eligibility", "right to work"],
+          "failure_message": "E-Verify statement absent. Recommended for federal contractor postings in E-Verify mandatory states.",
+          "applicable_regions": ["AZ", "AL", "GA", "NC", "SC", "TN", "UT"]
+        }
+      ]
+    },
+
+    "SALARY_TRANSPARENCY": {
+      "description": "Compensation disclosure requirements — varies by state/locality. Pulled from Regional Transparency Matrix.",
+      "severity": "HIGH",
+      "rules": [
+        {
+          "rule_id": "ST-001",
+          "name": "Pay Range Disclosure — Mandatory States",
+          "required_in_regions": ["CA", "CO", "NY", "WA", "IL", "MA", "NJ", "CT"],
+          "severity": "CRITICAL",
+          "match_type": "regex",
+          "patterns": [
+            "\\$[\\d,]+\\s*[-–—]\\s*\\$[\\d,]+",
+            "[\\d,]+\\s*per\\s*(hour|year|annum)",
+            "salary range",
+            "compensation range",
+            "pay range"
+          ],
+          "failure_message": "No salary/pay range detected. This posting appears to target a mandatory disclosure state. A specific compensation range MUST be included before posting in CA, CO, NY, WA, IL, MA, NJ, or CT.",
+          "legal_citation": "CO SB21-085; NY Labor Law §194-b; CA Labor Code §432.3; WA SB 5761"
+        },
+        {
+          "rule_id": "ST-002",
+          "name": "Benefits Disclosure",
+          "required_in_regions": ["CO", "WA"],
+          "severity": "HIGH",
+          "match_type": "semantic",
+          "semantic_threshold": 0.65,
+          "canonical_text": "Benefits include health insurance, dental, vision, 401(k), paid time off.",
+          "failure_message": "Benefits summary missing. CO and WA require general benefits description alongside pay range."
+        }
+      ]
+    },
+
+    "PROHIBITED_LANGUAGE": {
+      "description": "Terms flagged for legal risk, age discrimination, gender bias, or Vertiv brand violation.",
+      "severity_map": {
+        "CRITICAL": "Direct legal exposure — do not publish under any circumstances.",
+        "HIGH": "Strong recommendation to remove — significant bias or risk signal.",
+        "MEDIUM": "Flag for human review — context-dependent."
+      },
+      "rules": [
+        {
+          "rule_id": "PL-001",
+          "name": "Age-Biased Language",
+          "severity": "CRITICAL",
+          "match_type": "keyword_list",
+          "terms": [
+            "young professional", "recent graduate", "digital native",
+            "youthful energy", "fresh perspective", "new to the workforce",
+            "energetic", "young team", "startup energy"
+          ],
+          "failure_message": "Age-biased language detected. Terms implying preference for younger candidates violate the ADEA (Age Discrimination in Employment Act) for candidates 40+.",
+          "legal_citation": "Age Discrimination in Employment Act, 29 U.S.C. § 623"
+        },
+        {
+          "rule_id": "PL-002",
+          "name": "Gender-Coded Language — Masculine Bias",
+          "severity": "HIGH",
+          "match_type": "keyword_list",
+          "terms": [
+            "rockstar", "ninja", "guru", "dominate", "crush it",
+            "aggressive", "kill it", "manpower", "man-hours", "man up",
+            "brotherhood", "his or her", "chairman"
+          ],
+          "failure_message": "Masculine-coded or gender-exclusive language detected. These terms statistically reduce female applicant rates and may constitute gender discrimination.",
+          "legal_citation": "Title VII of the Civil Rights Act of 1964"
+        },
+        {
+          "rule_id": "PL-003",
+          "name": "Citizenship/National Origin Discriminatory Language",
+          "severity": "CRITICAL",
+          "match_type": "keyword_list",
+          "terms": [
+            "U.S. citizen only", "must be a citizen",
+            "citizens only", "no visa sponsorship — citizens only"
+          ],
+          "failure_message": "Language may constitute national origin discrimination. Note: 'Authorization to work in the U.S. required' is acceptable. 'Citizens only' language is not — contact Legal before publishing.",
+          "legal_citation": "Immigration and Nationality Act § 274B; Title VII"
+        },
+        {
+          "rule_id": "PL-004",
+          "name": "Brand Risk — Competitor Mentions",
+          "severity": "MEDIUM",
+          "match_type": "keyword_list",
+          "terms": [
+            "Eaton", "Schneider Electric", "Emerson", "ABB", "Siemens Energy",
+            "better than", "unlike our competitors"
+          ],
+          "failure_message": "Competitor name or comparative brand language detected. Remove or escalate to Brand/Legal for approval."
+        },
+        {
+          "rule_id": "PL-005",
+          "name": "Salary Anchoring / Unpublished Range References",
+          "severity": "HIGH",
+          "match_type": "keyword_list",
+          "terms": [
+            "competitive salary", "market rate", "based on experience",
+            "DOE", "TBD", "salary commensurate", "to be determined"
+          ],
+          "applicable_regions": ["CA", "CO", "NY", "WA"],
+          "failure_message": "Vague compensation language detected in a mandatory transparency state. 'Competitive salary' or 'DOE' do not satisfy pay range disclosure requirements. Provide a specific dollar range.",
+          "legal_citation": "CO SB21-085; CA Labor Code §432.3"
+        }
+      ]
+    },
+
+    "STYLE_AND_STRUCTURE": {
+      "description": "Vertiv posting quality standards — not legally required but required for brand consistency and sourcing quality.",
+      "severity": "LOW",
+      "rules": [
+        {
+          "rule_id": "SS-001",
+          "name": "Minimum Character Count",
+          "severity": "MEDIUM",
+          "match_type": "computed",
+          "minimum_chars": 500,
+          "failure_message": "Job description is too short (< 500 characters). Thin postings suppress Indeed/LinkedIn algorithmic distribution and reduce apply rates."
+        },
+        {
+          "rule_id": "SS-002",
+          "name": "Maximum Character Count",
+          "severity": "LOW",
+          "match_type": "computed",
+          "maximum_chars": 5000,
+          "failure_message": "Job description exceeds 5,000 characters. Long postings reduce mobile completion rates. Trim or restructure."
+        },
+        {
+          "rule_id": "SS-003",
+          "name": "Responsibilities Section Present",
+          "severity": "MEDIUM",
+          "match_type": "semantic",
+          "semantic_threshold": 0.60,
+          "canonical_text": "Responsibilities include managing, developing, coordinating, or executing key tasks in this role.",
+          "failure_message": "No clear responsibilities or 'what you'll do' section detected. Include a responsibilities block to improve candidate clarity and SEO."
+        },
+        {
+          "rule_id": "SS-004",
+          "name": "Qualifications Section Present",
+          "severity": "MEDIUM",
+          "match_type": "semantic",
+          "semantic_threshold": 0.60,
+          "canonical_text": "Requirements include education, experience, certifications, or skills needed for this role.",
+          "failure_message": "No qualifications or requirements section detected. Missing qualifications block reduces ATS screening accuracy."
+        },
+        {
+          "rule_id": "SS-005",
+          "name": "Vertiv Company Boilerplate",
+          "severity": "LOW",
+          "match_type": "keyword_list",
+          "terms": ["Vertiv", "critical digital infrastructure", "data center"],
+          "failure_message": "No Vertiv brand language detected. Ensure approved company description boilerplate is included."
+        }
+      ]
+    },
+
+    "EXPORT_CONTROL": {
+      "description": "ITAR/EAR export control language for regulated technical roles.",
+      "severity": "HIGH",
+      "rules": [
+        {
+          "rule_id": "EC-001",
+          "name": "ITAR Notice for Regulated Roles",
+          "required_for_roles": ["engineer", "manufacturing", "research", "development", "systems"],
+          "severity": "HIGH",
+          "match_type": "keyword",
+          "keywords": ["ITAR", "export control", "U.S. person", "export administration regulations"],
+          "failure_message": "Role appears to involve regulated technical areas (engineering/R&D/manufacturing) but lacks ITAR/EAR export control language. Confirm with Legal whether this role requires a U.S. Person designation statement.",
+          "legal_citation": "22 CFR § 120-130 (ITAR); 15 CFR § 730-774 (EAR)"
+        }
+      ]
+    }
+
+  },
+
+  "escalation_matrix": {
+    "CRITICAL": {
+      "action": "BLOCK_PUBLISH",
+      "notify": ["recruiter", "legal_counsel", "hr_compliance"],
+      "sla_hours": 24
+    },
+    "HIGH": {
+      "action": "FLAG_FOR_REVIEW",
+      "notify": ["recruiter", "hiring_manager"],
+      "sla_hours": 48
+    },
+    "MEDIUM": {
+      "action": "ADVISORY",
+      "notify": ["recruiter"],
+      "sla_hours": 72
+    },
+    "LOW": {
+      "action": "INFO",
+      "notify": [],
+      "sla_hours": null
+    }
+  }
+}

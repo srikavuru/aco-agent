@@ -1,0 +1,16 @@
+# ACO Agent — Azure Function dependencies
+# Pin versions for production stability
+
+azure-functions>=1.21.3
+azure-cosmos>=4.7.0
+
+# Semantic similarity engine
+# all-MiniLM-L6-v2 downloads automatically on first run
+# ~22MB model — pre-download in Docker build layer for prod
+sentence-transformers>=3.3.1
+torch>=2.9.0          # CPU-only variant recommended for Functions (smaller image)
+numpy>=1.26.4
+
+# Dev/test only — not needed in production
+# pytest==8.3.3
+# pytest-asyncio==0.24.0

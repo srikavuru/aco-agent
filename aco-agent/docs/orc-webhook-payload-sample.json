@@ -1,0 +1,41 @@
+{
+  "eventType": "REQUISITION_DRAFT_SAVED",
+  "eventTimestamp": "2026-06-23T14:30:00.000Z",
+  "sourceSystem": "Oracle Recruiting Cloud",
+  "tenantId": "vertiv-prod",
+  "requisition": {
+    "requisitionNumber": "REQ-12345",
+    "title": "Senior Electrical Engineer — OneCore Platform",
+    "status": "Draft",
+    "department": "Engineering — Power Systems",
+    "jobFamily": "Electrical Engineering",
+    "jobLevel": "P4 — Senior Individual Contributor",
+    "primaryLocation": "Columbus, OH, US",
+    "additionalLocations": ["Westerville, OH, US", "Delaware, OH, US"],
+    "hiringManager": {
+      "name": "Jane Martinez",
+      "email": "jane.martinez@vertiv.com",
+      "employeeId": "EMP-00842"
+    },
+    "recruiterEmail": "sri.kavuru@vertiv.com",
+    "openDate": "2026-06-23",
+    "targetFillDate": "2026-08-15",
+    "numberOfOpenings": 1,
+    "employmentType": "Full-Time",
+    "compensationRange": {
+      "currency": "USD",
+      "minimum": 110000,
+      "maximum": 135000,
+      "frequency": "Annual"
+    },
+    "jobDescription": "<div class=\"jd-body\"><h2>About Vertiv</h2><p>Vertiv designs and manufactures critical digital infrastructure for data centers globally, including UPS, switchgear, and thermal management systems.</p><h2>What You'll Do</h2><ul><li>Lead electrical design of AC power distribution equipment (Juice Box / SmartRun)</li><li>Own FAT protocols and design validation through engineering lifecycle</li><li>Collaborate with thermal and BMS teams on integrated solutions</li></ul><h2>Requirements</h2><ul><li>5+ years in power distribution or UPS design</li><li>BSEE required; PE license preferred</li><li>Familiarity with NEC, UL 891, IEC 61439</li></ul><p>Salary: $110,000 &ndash; $135,000 annually. Benefits include medical, dental, vision, 401(k) with match, paid parental leave, and tuition reimbursement.</p><p>Vertiv is an Equal Opportunity/Affirmative Action employer. We promote equal opportunity for all applicants regardless of race, color, religion, sex, national origin, age, disability, veteran status, or other protected characteristics.</p><p>Vertiv will make reasonable accommodations for qualified individuals with disabilities. Contact HR at accommodations@vertiv.com.</p><p>Vertiv will not discharge or in any other manner discriminate against employees or applicants because they have inquired about, discussed, or disclosed their own pay or the pay of another employee or applicant.</p><p>This position may be subject to U.S. export control requirements (ITAR/EAR). Persons hired may need to qualify as a U.S. Person.</p></div>",
+    "internalDescription": "Backfill for Tom Chen (promoted to Lead). Budget approved Q2.",
+    "eeoCategory": "Professionals",
+    "flsaStatus": "Exempt",
+    "travelRequired": "10%",
+    "referralBonus": {
+      "amount": 3000,
+      "currency": "USD"
+    }
+  }
+}

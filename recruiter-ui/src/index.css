@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --color-vertiv-red: #E31837;
+  --color-vertiv-dark: #B8132D;
+  --color-vertiv-light: #FDE8EB;
+  --color-sev-critical: #DC2626;
+  --color-sev-critical-bg: #FEF2F2;
+  --color-sev-high: #EA580C;
+  --color-sev-high-bg: #FFF7ED;
+  --color-sev-medium: #D97706;
+  --color-sev-medium-bg: #FFFBEB;
+  --color-sev-low: #2563EB;
+  --color-sev-low-bg: #EFF6FF;
+  --font-sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #fff;
+}

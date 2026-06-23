@@ -1,0 +1,114 @@
+{
+  "audit_id": "ACO-20240115-A3F2B1C9",
+  "certificate_version": "1.0.0",
+  "rules_schema_version": "1.0.0",
+  "audited_at": "2024-01-15T14:32:07.441Z",
+  "audited_at_epoch": 1705329127,
+  "ttl": null,
+
+  "posting": {
+    "title": "Senior Electrical Engineer — OneCore",
+    "region": "CO",
+    "role_type": "engineer",
+    "job_description_fingerprint": "a8f3c29d",
+    "submitted_by": "j.recruiter@vertiv.com"
+  },
+
+  "audit_result": {
+    "overall_status": "BLOCKED",
+    "action_required": true,
+    "counts": {
+      "CRITICAL": 2,
+      "HIGH": 1,
+      "MEDIUM": 1,
+      "LOW": 0
+    },
+    "total_findings": 4,
+    "publish_recommendation": "CRITICAL compliance violations detected. Do NOT publish this posting until all CRITICAL items are resolved. Contact Legal if needed.",
+    "escalation_note": "Escalation required for: RD-001, PL-003. Notify recruiter and legal_counsel per escalation_matrix. SLA: 24 hours."
+  },
+
+  "executive_summary": {
+    "critical_issues": [
+      {
+        "rule_id": "RD-001",
+        "rule_name": "EEO Statement",
+        "failure_message": "EEO statement is missing or does not meet minimum semantic equivalency threshold. This is a federal legal requirement (Title VII, ADEA, ADA). Add the approved Vertiv EEO block before publishing.",
+        "legal_citation": "Title VII of the Civil Rights Act of 1964; 41 CFR 60-1.4"
+      },
+      {
+        "rule_id": "PL-003",
+        "rule_name": "Citizenship/National Origin Discriminatory Language",
+        "failure_message": "Language may constitute national origin discrimination. Note: 'Authorization to work in the U.S. required' is acceptable. 'Citizens only' language is not — contact Legal before publishing.",
+        "legal_citation": "Immigration and Nationality Act § 274B; Title VII"
+      }
+    ],
+    "high_priority_issues": [
+      {
+        "rule_id": "ST-001",
+        "rule_name": "Pay Range Disclosure — Mandatory States",
+        "failure_message": "No salary/pay range detected. This posting appears to target a mandatory disclosure state. A specific compensation range MUST be included before posting in CA, CO, NY, WA, IL, MA, NJ, or CT."
+      }
+    ]
+  },
+
+  "findings": [
+    {
+      "rule_id": "RD-001",
+      "rule_name": "EEO Statement",
+      "category": "REQUIRED_DISCLAIMERS",
+      "severity": "CRITICAL",
+      "status": "FAIL",
+      "match_type": "semantic",
+      "failure_message": "EEO statement is missing or does not meet minimum semantic equivalency threshold. This is a federal legal requirement (Title VII, ADEA, ADA). Add the approved Vertiv EEO block before publishing.",
+      "semantic_score": 0.2341,
+      "semantic_threshold": 0.82,
+      "legal_citation": "Title VII of the Civil Rights Act of 1964; 41 CFR 60-1.4",
+      "remediation_template": "vertiv_eeo_block_v3",
+      "region_applicable": true
+    },
+    {
+      "rule_id": "PL-003",
+      "rule_name": "Citizenship/National Origin Discriminatory Language",
+      "category": "PROHIBITED_LANGUAGE",
+      "severity": "CRITICAL",
+      "status": "FAIL",
+      "match_type": "keyword_list",
+      "failure_message": "Language may constitute national origin discrimination. Note: 'Authorization to work in the U.S. required' is acceptable. 'Citizens only' language is not — contact Legal before publishing.",
+      "matched_terms": ["U.S. citizens only"],
+      "legal_citation": "Immigration and Nationality Act § 274B; Title VII",
+      "region_applicable": true
+    },
+    {
+      "rule_id": "ST-001",
+      "rule_name": "Pay Range Disclosure — Mandatory States",
+      "category": "SALARY_TRANSPARENCY",
+      "severity": "HIGH",
+      "status": "FAIL",
+      "match_type": "regex",
+      "failure_message": "No salary/pay range detected. This posting appears to target a mandatory disclosure state. A specific compensation range MUST be included before posting in CA, CO, NY, WA, IL, MA, NJ, or CT.",
+      "legal_citation": "CO SB21-085; NY Labor Law §194-b; CA Labor Code §432.3; WA SB 5761",
+      "region_applicable": true
+    },
+    {
+      "rule_id": "PL-001",
+      "rule_name": "Age-Biased Language",
+      "category": "PROHIBITED_LANGUAGE",
+      "severity": "CRITICAL",
+      "status": "FAIL",
+      "match_type": "keyword_list",
+      "failure_message": "Age-biased language detected. Terms implying preference for younger candidates violate the ADEA (Age Discrimination in Employment Act) for candidates 40+.",
+      "matched_terms": ["young professional", "digital native"],
+      "legal_citation": "Age Discrimination in Employment Act, 29 U.S.C. § 623",
+      "region_applicable": true
+    }
+  ],
+
+  "legal_record": {
+    "decision_authority": "HUMAN_RECRUITER",
+    "tool_type": "DECISION_SUPPORT",
+    "audit_engine": "ACO v1.0",
+    "model_used_for_semantic": "all-MiniLM-L6-v2",
+    "disclaimer": "This audit is a decision support tool only. All publish/hold decisions are the responsibility of the submitting recruiter and their manager. This certificate does not constitute legal advice."
+  }
+}

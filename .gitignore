@@ -1,0 +1,33 @@
+# Azure Function secrets
+local.settings.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Environment
+.env
+.env.*
+
+# Node
+node_modules/
+
+# Sentence-transformers model cache
+.cache/
+*.onnx
+sentence-transformers/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Build artifacts
+dist/
+.pytest_cache/
