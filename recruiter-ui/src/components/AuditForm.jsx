@@ -1,7 +1,6 @@
 import { useState } from 'react'
 
 export default function AuditForm({ regions, roleTypes, onSubmit, loading, scrapedMeta }) {
-  const isProduction = !window.location.hostname.includes('localhost')
   const [mode, setMode] = useState('text')
   const [jd, setJd] = useState('')
   const [url, setUrl] = useState('')
@@ -141,14 +140,8 @@ export default function AuditForm({ regions, roleTypes, onSubmit, loading, scrap
                 className="field-input font-mono text-[12px]"
               />
               <p className="text-[11px] text-gray-400 leading-relaxed">
-                Paste an Oracle HCM job posting URL. ACO will scrape the title, req number, location, and job description automatically.
+                Paste an Oracle HCM job posting URL. ACO will fetch the title, req number, location, and job description via the Oracle REST API automatically.
               </p>
-              {isProduction && (
-                <p className="text-[11px] text-amber-600 bg-amber-50 rounded px-2.5 py-1.5 leading-relaxed">
-                  URL mode requires a headless browser and is only available when running locally (<code className="text-[10px]">func start</code>).
-                  Use <button type="button" onClick={() => setMode('text')} className="underline font-semibold">Paste Text</button> mode for the hosted version.
-                </p>
-              )}
             </div>
           )}
         </div>

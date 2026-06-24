@@ -1,109 +1,106 @@
 """
-URL Fetcher — Scrapes job posting data from Oracle HCM career pages.
+URL Fetcher — Extracts job posting data from Oracle HCM career URLs.
 
-Uses Playwright (sync API) to render the client-side SPA and extract
-structured data. Same extraction logic as scrapers/vertiv_scraper.py.
+Uses the Oracle HCM REST API directly (no browser needed).
+Parses the job URL to extract the job ID and site code, then
+calls the recruitingCEJobRequisitionDetails endpoint.
 
-Requires: pip install playwright && python -m playwright install chromium
-
-Note: Playwright requires a Chromium binary (~150MB). This works for
-local dev and Premium plan Functions. On Consumption plan, callers
-should paste the JD text directly instead.
+Works on Azure Functions Consumption plan — no Playwright required.
 """
 
 import logging
 import re
 
+import requests
+
 logger = logging.getLogger(__name__)
-
-# JS extraction script — shared with scrapers/vertiv_scraper.py
-_EXTRACT_JS = """() => {
-    const result = {
-        title: '',
-        req_number: '',
-        location: '',
-        job_description: '',
-        job_family: '',
-    };
-
-    const titleEl = document.querySelector('h1.job-details__title');
-    if (titleEl) result.title = titleEl.innerText.trim();
-
-    const descEl = document.querySelector('.job-details__description-content');
-    if (descEl) result.job_description = descEl.innerText.trim();
-
-    const locEl = document.querySelector('.job-meta__locations');
-    if (locEl) result.location = locEl.innerText.trim();
-
-    const metaItems = document.querySelectorAll('.job-meta__item');
-    for (const item of metaItems) {
-        const label = item.querySelector('.job-meta__title');
-        const value = item.querySelector('.job-meta__subitem');
-        if (!label || !value) continue;
-
-        const labelText = label.innerText.trim().toLowerCase();
-        const valueText = value.innerText.trim();
-
-        if (labelText.includes('identification') || labelText.includes('requisition')) {
-            result.req_number = valueText;
-        } else if (labelText.includes('category') || labelText.includes('family')) {
-            result.job_family = valueText;
-        } else if (labelText.includes('location') && !result.location) {
-            result.location = valueText;
-        }
-    }
-
-    return result;
-}"""
 
 
 def fetch_posting(url: str) -> dict:
     """
-    Fetch and extract structured data from an Oracle HCM job posting URL.
+    Fetch structured data from an Oracle HCM job posting URL.
 
-    Returns dict with keys: title, req_number, location, job_description,
-    job_family, source_url. Raises on failure.
+    Returns dict with: title, req_number, location, job_description,
+    job_family, source_url.
     """
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError:
-        raise RuntimeError(
-            "Playwright is not installed. URL mode requires: "
-            "pip install playwright && python -m playwright install chromium. "
-            "Paste the job description text directly as an alternative."
-        )
+    host, job_id, site = _parse_url(url)
+    api_url = (
+        f"https://{host}/hcmRestApi/resources/latest/recruitingCEJobRequisitionDetails"
+        f"?expand=all&onlyData=true&finder=ById;Id=%22{job_id}%22,siteNumber={site}"
+    )
 
-    logger.info("Fetching posting from URL: %s", url)
+    logger.info("Fetching job %s from %s", job_id, host)
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        try:
-            page = browser.new_page()
-            page.goto(url, wait_until="networkidle", timeout=60000)
-            page.wait_for_selector("h1.job-details__title", timeout=15000)
+    resp = requests.get(api_url, headers={"Accept": "application/json"}, timeout=30)
+    resp.raise_for_status()
+    data = resp.json()
 
-            data = page.evaluate(_EXTRACT_JS)
-        finally:
-            browser.close()
+    items = data.get("items", [])
+    if not items:
+        raise ValueError(f"No job found for ID {job_id} on site {site}")
 
-    data["job_description"] = _clean_text(data.get("job_description", ""))
-    data["source_url"] = url
+    item = items[0]
 
-    if not data["job_description"] or len(data["job_description"]) < 50:
+    job_description = _strip_html(item.get("ExternalDescriptionStr", ""))
+    if not job_description:
+        job_description = _strip_html(item.get("ShortDescriptionStr", ""))
+
+    result = {
+        "title": item.get("Title", ""),
+        "req_number": str(item.get("Id", "")),
+        "location": item.get("PrimaryLocation", ""),
+        "job_description": _clean_text(job_description),
+        "job_family": item.get("Category", "") or item.get("JobFunction", ""),
+        "source_url": url,
+    }
+
+    if not result["job_description"] or len(result["job_description"]) < 50:
         raise ValueError(
-            f"Could not extract a valid job description from {url}. "
-            f"Got {len(data.get('job_description', ''))} chars."
+            f"Job description too short ({len(result['job_description'])} chars) for {url}"
         )
 
     logger.info(
         "Fetched: %s | %s | %s | %d chars",
-        data.get("title", "?"),
-        data.get("req_number", "?"),
-        data.get("location", "?"),
-        len(data["job_description"]),
+        result["title"], result["req_number"],
+        result["location"], len(result["job_description"]),
     )
 
-    return data
+    return result
+
+
+def _parse_url(url: str) -> tuple[str, str, str]:
+    """Extract host, job ID, and site code from an Oracle HCM URL."""
+    # Pattern: https://{host}/hcmUI/CandidateExperience/{lang}/sites/{site}/job/{id}
+    match = re.search(
+        r"https?://([^/]+)/hcmUI/CandidateExperience/\w+/sites/(\w+)/job/(\d+)",
+        url,
+    )
+    if match:
+        return match.group(1), match.group(3), match.group(2)
+
+    # Fallback: try to extract just the job ID
+    id_match = re.search(r"/job/(\d+)", url)
+    host_match = re.search(r"https?://([^/]+)", url)
+    if id_match and host_match:
+        return host_match.group(1), id_match.group(1), "CX"
+
+    raise ValueError(f"Cannot parse Oracle HCM job URL: {url}")
+
+
+def _strip_html(html: str) -> str:
+    if not html:
+        return ""
+    text = re.sub(r"<br\s*/?>", "\n", html, flags=re.IGNORECASE)
+    text = re.sub(r"</?(p|div|li|ul|ol|h[1-6])[^>]*>", "\n", text, flags=re.IGNORECASE)
+    text = re.sub(r"<[^>]+>", "", text)
+    text = re.sub(r"&nbsp;", " ", text)
+    text = re.sub(r"&amp;", "&", text)
+    text = re.sub(r"&lt;", "<", text)
+    text = re.sub(r"&gt;", ">", text)
+    text = re.sub(r"&ndash;", "-", text)
+    text = re.sub(r"&mdash;", "-", text)
+    text = re.sub(r"&#\d+;", "", text)
+    return text.strip()
 
 
 def _clean_text(text: str) -> str:

@@ -70,23 +70,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     job_description = body.get("job_description", "").strip()
     scraped = None
 
-    # ── URL mode: fetch and extract ───────────────────────────────────────
+    # ── URL mode: fetch via Oracle HCM REST API ─────────────────────────
     if url and not job_description:
         try:
             from shared.url_fetcher import fetch_posting
             scraped = fetch_posting(url)
             job_description = scraped["job_description"]
-        except BaseException as e:
+        except Exception as e:
             logger.error("URL fetch failed: %s", e, exc_info=True)
-            msg = str(e)
-            if "playwright" in msg.lower() or "browser" in msg.lower() or isinstance(e, (ImportError, RuntimeError)):
-                return _error(
-                    "URL mode requires Playwright (headless browser) which is not "
-                    "available on this server. Use 'Paste Text' mode instead, or "
-                    "run the audit locally with: func start",
-                    501,
-                )
-            return _error(f"Failed to fetch job posting from URL: {msg}", 422)
+            return _error(f"Failed to fetch job posting from URL: {e}", 422)
 
     if not job_description:
         return _error("job_description or url is required.", 400)
