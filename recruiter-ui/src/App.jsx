@@ -2,6 +2,7 @@ import { useState } from 'react'
 import AuditForm from './components/AuditForm'
 import AuditResult from './components/AuditResult'
 import AuditHistory from './components/AuditHistory'
+import BatchScrape from './components/BatchScrape'
 
 const REGIONS = [
   { value: 'OH', label: 'Ohio' },
@@ -29,6 +30,7 @@ const ROLE_TYPES = [
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://aco-agent-func.azurewebsites.net'
 
 export default function App() {
+  const [tab, setTab] = useState('audit')
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -88,31 +90,63 @@ export default function App() {
         </div>
       </header>
 
+      {/* Tab bar */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-[900px] mx-auto px-6 flex gap-0">
+          <button
+            onClick={() => setTab('audit')}
+            className={`px-5 py-2.5 text-[12px] font-semibold uppercase tracking-wider border-b-2 transition-colors ${
+              tab === 'audit'
+                ? 'border-vertiv text-vertiv'
+                : 'border-transparent text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            Audit
+          </button>
+          <button
+            onClick={() => setTab('batch')}
+            className={`px-5 py-2.5 text-[12px] font-semibold uppercase tracking-wider border-b-2 transition-colors ${
+              tab === 'batch'
+                ? 'border-vertiv text-vertiv'
+                : 'border-transparent text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            Batch Scrape
+          </button>
+        </div>
+      </div>
+
       {/* Main */}
       <main className="flex-1 max-w-[900px] w-full mx-auto px-6 py-6">
-        <AuditForm
-          regions={REGIONS}
-          roleTypes={ROLE_TYPES}
-          onSubmit={handleSubmit}
-          loading={loading}
-          scrapedMeta={scrapedMeta}
-        />
+        {tab === 'audit' && (
+          <>
+            <AuditForm
+              regions={REGIONS}
+              roleTypes={ROLE_TYPES}
+              onSubmit={handleSubmit}
+              loading={loading}
+              scrapedMeta={scrapedMeta}
+            />
 
-        {history.length > 0 && (
-          <AuditHistory
-            history={history}
-            activeId={result?.audit_id}
-            onSelect={handleHistorySelect}
-          />
+            {history.length > 0 && (
+              <AuditHistory
+                history={history}
+                activeId={result?.audit_id}
+                onSelect={handleHistorySelect}
+              />
+            )}
+
+            {error && (
+              <div className="mt-5 px-4 py-3 bg-vertiv-bg border-l-4 border-vertiv rounded-r-lg text-[13px] text-vertiv font-medium">
+                {error}
+              </div>
+            )}
+
+            {result && <AuditResult certificate={result} />}
+          </>
         )}
 
-        {error && (
-          <div className="mt-5 px-4 py-3 bg-vertiv-bg border-l-4 border-vertiv rounded-r-lg text-[13px] text-vertiv font-medium">
-            {error}
-          </div>
-        )}
-
-        {result && <AuditResult certificate={result} />}
+        {tab === 'batch' && <BatchScrape />}
       </main>
 
       {/* Footer */}
