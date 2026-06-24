@@ -1,0 +1,21 @@
+name: Keep Function Warm
+
+on:
+  schedule:
+    # Every 15 minutes, 12:00-23:45 UTC (7am-7pm EST), weekdays only
+    - cron: '*/15 12-23 * * 1-5'
+
+jobs:
+  warmup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping warmup endpoint
+        run: |
+          response=$(curl -s -w "\n%{http_code}" --max-time 120 \
+            https://aco-agent-func.azurewebsites.net/api/warmup)
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | head -1)
+          echo "HTTP $http_code: $body"
+          if [ "$http_code" != "200" ]; then
+            echo "::warning::Warmup returned $http_code"
+          fi
