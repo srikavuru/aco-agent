@@ -29,6 +29,7 @@ import requests
 from shared.rule_engine import RuleEngine
 from shared.audit_certificate import build_certificate
 from shared.url_fetcher import _strip_html, _clean_text
+from shared.persist import save_certificate
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +118,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 req_number=job_id,
                 rules_evaluated=engine.rules_evaluated,
             )
+            save_certificate(cert)
             results.append(cert)
 
         except Exception as e:

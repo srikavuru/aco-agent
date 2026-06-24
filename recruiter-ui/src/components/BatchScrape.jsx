@@ -1,6 +1,19 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import * as XLSX from 'xlsx'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://aco-agent-func.azurewebsites.net'
+const ORC_BASE = 'https://egup.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job'
+
+async function ensureWarm(setProgress) {
+  setProgress('Warming up audit engine...')
+  try {
+    const res = await fetch(`${API_BASE}/api/warmup`, { signal: AbortSignal.timeout(120000) })
+    if (res.ok) {
+      const data = await res.json()
+      if (data.ms > 5000) setProgress(`Engine warm (${Math.round(data.ms / 1000)}s cold start). Starting audit...`)
+    }
+  } catch {}
+}
 
 const STATUS_COLORS = {
   BLOCKED: 'text-sev-critical',
@@ -10,8 +23,23 @@ const STATUS_COLORS = {
   APPROVED: 'text-approved',
 }
 
+function parseResult(data) {
+  return {
+    title: data.posting?.title || '',
+    req_number: data.posting?.req_number || '',
+    region: data.posting?.region || '',
+    overall_status: data.audit_result?.overall_status || '',
+    counts: data.audit_result?.counts || {},
+    findings_count: data.audit_result?.total_findings || 0,
+    compliance_score: data.audit_result?.rules_evaluated
+      ? Math.round(((data.audit_result.rules_evaluated - data.audit_result.total_findings) / data.audit_result.rules_evaluated) * 100)
+      : 0,
+    certificate: data,
+  }
+}
+
 export default function BatchScrape() {
-  const [mode, setMode] = useState('crawl')
+  const [mode, setMode] = useState('reqs')
   const [urls, setUrls] = useState('')
   const [limit, setLimit] = useState(25)
   const [results, setResults] = useState([])
@@ -19,67 +47,58 @@ export default function BatchScrape() {
   const [running, setRunning] = useState(false)
   const [progress, setProgress] = useState('')
 
+  // Upload Reqs state
+  const [fileData, setFileData] = useState(null)   // { headers: [], rows: [] }
+  const [fileName, setFileName] = useState('')
+  const [selectedCol, setSelectedCol] = useState('')
+  const fileInputRef = useRef(null)
+
   const urlList = urls.split('\n').map((u) => u.trim()).filter((u) => u.startsWith('http'))
 
-  async function runCrawlAll() {
-    setRunning(true)
-    setResults([])
-    setSummary(null)
-    setProgress(`Crawling ${limit} postings from Vertiv careers...`)
+  const reqNumbers = fileData && selectedCol
+    ? [...new Set(fileData.rows.map((r) => String(r[selectedCol] || '').trim()).filter((v) => v && /^\d{5,}$/.test(v)))]
+    : []
 
-    try {
-      const res = await fetch(`${API_BASE}/api/audit-all`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ limit, offset: 0 }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setProgress(`Error: ${data.error || res.status}`)
-        setRunning(false)
-        return
+  // ── File upload handler ────────────────────────────────────────────────
+  function handleFileUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setFileName(file.name)
+    setSelectedCol('')
+
+    const reader = new FileReader()
+    reader.onload = (evt) => {
+      try {
+        const wb = XLSX.read(evt.target.result, { type: 'array' })
+        const sheet = wb.Sheets[wb.SheetNames[0]]
+        const json = XLSX.utils.sheet_to_json(sheet, { defval: '' })
+        if (json.length === 0) { setFileData(null); return }
+        const headers = Object.keys(json[0])
+        setFileData({ headers, rows: json })
+        const autoCol = headers.find((h) =>
+          /req|requisition|job.?id|posting.?id/i.test(h)
+        )
+        if (autoCol) setSelectedCol(autoCol)
+      } catch {
+        setFileData(null)
       }
-
-      const audited = (data.results || []).filter((r) => r.audit_result)
-      setResults(audited.map((r) => ({
-        title: r.posting?.title || '',
-        req_number: r.posting?.req_number || '',
-        region: r.posting?.region || '',
-        overall_status: r.audit_result?.overall_status || '',
-        counts: r.audit_result?.counts || {},
-        findings_count: r.audit_result?.total_findings || 0,
-        compliance_score: r.audit_result?.rules_evaluated
-          ? Math.round(((r.audit_result.rules_evaluated - r.audit_result.total_findings) / r.audit_result.rules_evaluated) * 100)
-          : 0,
-        certificate: r,
-      })))
-      setSummary({
-        total_jobs: data.total_jobs,
-        audited: data.audited,
-        skipped: data.skipped,
-        errors: data.errors,
-        elapsed: data.elapsed_seconds,
-        status_breakdown: data.summary?.status_breakdown || {},
-        total_findings: data.summary?.total_findings || 0,
-      })
-      setProgress('')
-    } catch (err) {
-      setProgress(`Error: ${err.message}`)
-    } finally {
-      setRunning(false)
     }
+    reader.readAsArrayBuffer(file)
   }
 
-  async function runUrlBatch() {
-    if (urlList.length === 0) return
+  // ── Run methods ────────────────────────────────────────────────────────
+  async function runReqBatch() {
+    if (reqNumbers.length === 0) return
     setRunning(true)
     setResults([])
     setSummary(null)
+    await ensureWarm(setProgress)
 
     const batchResults = []
-    for (let i = 0; i < urlList.length; i++) {
-      setProgress(`Auditing ${i + 1}/${urlList.length}...`)
-      const url = urlList[i]
+    for (let i = 0; i < reqNumbers.length; i++) {
+      const req = reqNumbers[i]
+      setProgress(`Auditing ${i + 1}/${reqNumbers.length}: ${req}`)
+      const url = `${ORC_BASE}/${req}`
       try {
         const res = await fetch(`${API_BASE}/api/audit`, {
           method: 'POST',
@@ -88,24 +107,64 @@ export default function BatchScrape() {
         })
         const data = await res.json()
         if (!res.ok) {
-          batchResults.push({ title: url.slice(-20), error: data.error, overall_status: '' })
+          batchResults.push({ req_number: req, title: `Req ${req}`, error: data.error, overall_status: '' })
         } else {
-          batchResults.push({
-            title: data.posting?.title || '',
-            req_number: data.posting?.req_number || '',
-            region: data.posting?.region || '',
-            overall_status: data.audit_result?.overall_status || '',
-            counts: data.audit_result?.counts || {},
-            findings_count: data.audit_result?.total_findings || 0,
-            compliance_score: data.audit_result?.rules_evaluated
-              ? Math.round(((data.audit_result.rules_evaluated - data.audit_result.total_findings) / data.audit_result.rules_evaluated) * 100)
-              : 0,
-            certificate: data,
-          })
+          batchResults.push(parseResult(data))
         }
       } catch (err) {
-        batchResults.push({ title: url.slice(-20), error: err.message, overall_status: '' })
+        batchResults.push({ req_number: req, title: `Req ${req}`, error: err.message, overall_status: '' })
       }
+      setResults([...batchResults])
+    }
+    setProgress('')
+    setRunning(false)
+  }
+
+  async function runCrawlAll() {
+    setRunning(true)
+    setResults([])
+    setSummary(null)
+    await ensureWarm(setProgress)
+    setProgress(`Crawling ${limit} postings from Vertiv careers...`)
+    try {
+      const res = await fetch(`${API_BASE}/api/audit-all`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ limit, offset: 0 }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setProgress(`Error: ${data.error || res.status}`); setRunning(false); return }
+      const audited = (data.results || []).filter((r) => r.audit_result)
+      setResults(audited.map(parseResult))
+      setSummary({
+        total_jobs: data.total_jobs, audited: data.audited, skipped: data.skipped,
+        errors: data.errors, elapsed: data.elapsed_seconds,
+        status_breakdown: data.summary?.status_breakdown || {},
+        total_findings: data.summary?.total_findings || 0,
+      })
+      setProgress('')
+    } catch (err) { setProgress(`Error: ${err.message}`) }
+    finally { setRunning(false) }
+  }
+
+  async function runUrlBatch() {
+    if (urlList.length === 0) return
+    setRunning(true)
+    setResults([])
+    setSummary(null)
+    await ensureWarm(setProgress)
+    const batchResults = []
+    for (let i = 0; i < urlList.length; i++) {
+      setProgress(`Auditing ${i + 1}/${urlList.length}...`)
+      try {
+        const res = await fetch(`${API_BASE}/api/audit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: urlList[i] }),
+        })
+        const data = await res.json()
+        batchResults.push(res.ok ? parseResult(data) : { title: urlList[i].slice(-20), error: data.error, overall_status: '' })
+      } catch (err) { batchResults.push({ title: urlList[i].slice(-20), error: err.message, overall_status: '' }) }
       setResults([...batchResults])
     }
     setProgress('')
@@ -132,6 +191,15 @@ export default function BatchScrape() {
   }
 
   const doneCount = results.filter((r) => r.overall_status).length
+  const runHandler = mode === 'crawl' ? runCrawlAll : mode === 'urls' ? runUrlBatch : runReqBatch
+  const canRun = mode === 'crawl' ? true : mode === 'urls' ? urlList.length > 0 : reqNumbers.length > 0
+  const btnLabel = running
+    ? progress || 'Processing...'
+    : mode === 'crawl'
+      ? `Crawl & Audit ${limit} Postings`
+      : mode === 'urls'
+        ? `Audit ${urlList.length} URLs`
+        : `Audit ${reqNumbers.length} Req Numbers`
 
   return (
     <div className="space-y-5">
@@ -139,55 +207,142 @@ export default function BatchScrape() {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200/80 p-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="inline-flex border border-gray-200 rounded-full overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setMode('crawl')}
-              className={`px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition-colors ${
-                mode === 'crawl' ? 'bg-vertiv text-white' : 'bg-white text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Crawl All
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode('urls')}
-              className={`px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition-colors border-l border-gray-200 ${
-                mode === 'urls' ? 'bg-vertiv text-white' : 'bg-white text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Specific URLs
-            </button>
+            {[
+              ['reqs', 'Upload Reqs'],
+              ['crawl', 'Crawl All'],
+              ['urls', 'Specific URLs'],
+            ].map(([key, label], i) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setMode(key)}
+                className={`px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition-colors ${
+                  i > 0 ? 'border-l border-gray-200' : ''
+                } ${mode === key ? 'bg-vertiv text-white' : 'bg-white text-gray-500 hover:text-gray-700'}`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {mode === 'crawl' ? (
+        {/* ── Upload Reqs mode ──────────────────────────────────────── */}
+        {mode === 'reqs' && (
+          <div className="space-y-4">
+            <div>
+              <label className="field-label">Upload Spreadsheet</label>
+              <div className="flex items-center gap-3">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv,.xlsx,.xls,.tsv"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={running}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <UploadIcon />
+                  {fileName || 'Choose File'}
+                </button>
+                <span className="text-[11px] text-gray-400">CSV, Excel (.xlsx), or TSV</span>
+              </div>
+            </div>
+
+            {fileData && (
+              <>
+                <div>
+                  <label className="field-label">Select Req Number Column</label>
+                  <select
+                    value={selectedCol}
+                    onChange={(e) => setSelectedCol(e.target.value)}
+                    className="field-input w-64"
+                    disabled={running}
+                  >
+                    <option value="">-- Select column --</option>
+                    {fileData.headers.map((h) => (
+                      <option key={h} value={h}>{h}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Preview */}
+                <div className="bg-surface rounded-lg border border-gray-200/80 overflow-hidden">
+                  <div className="px-4 py-2 text-[11px] text-gray-400 border-b border-gray-100">
+                    Preview: {fileData.rows.length} rows, {fileData.headers.length} columns
+                    {selectedCol && <span className="ml-2 text-vertiv font-semibold"> | {reqNumbers.length} valid req numbers found</span>}
+                  </div>
+                  <div className="overflow-x-auto max-h-48">
+                    <table className="w-full text-[12px]">
+                      <thead>
+                        <tr>
+                          {fileData.headers.map((h) => (
+                            <th
+                              key={h}
+                              className={`text-left px-3 py-1.5 font-medium text-[10px] uppercase tracking-wider whitespace-nowrap ${
+                                h === selectedCol ? 'bg-vertiv-light text-vertiv' : 'text-gray-400'
+                              }`}
+                            >
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {fileData.rows.slice(0, 5).map((row, i) => (
+                          <tr key={i} className="border-t border-gray-50">
+                            {fileData.headers.map((h) => (
+                              <td
+                                key={h}
+                                className={`px-3 py-1.5 whitespace-nowrap ${
+                                  h === selectedCol ? 'bg-vertiv-light/30 font-mono font-semibold text-gray-800' : 'text-gray-500'
+                                }`}
+                              >
+                                {String(row[h] || '').substring(0, 40)}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {fileData.rows.length > 5 && (
+                    <div className="px-4 py-1.5 text-[11px] text-gray-400 border-t border-gray-100">
+                      ...and {fileData.rows.length - 5} more rows
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ── Crawl All mode ────────────────────────────────────────── */}
+        {mode === 'crawl' && (
           <div>
             <label className="field-label">Number of Postings to Audit</label>
             <div className="flex items-center gap-3">
               <input
-                type="number"
-                min={1}
-                max={50}
-                value={limit}
+                type="number" min={1} max={50} value={limit}
                 onChange={(e) => setLimit(Math.min(50, Math.max(1, parseInt(e.target.value) || 1)))}
-                className="field-input w-24"
-                disabled={running}
+                className="field-input w-24" disabled={running}
               />
-              <span className="text-[12px] text-gray-400">
-                Max 50 per batch (Vertiv has 2,200+ active postings)
-              </span>
+              <span className="text-[12px] text-gray-400">Max 50 per batch (Vertiv has 2,200+ active postings)</span>
             </div>
           </div>
-        ) : (
+        )}
+
+        {/* ── Specific URLs mode ────────────────────────────────────── */}
+        {mode === 'urls' && (
           <div>
             <label className="field-label">Oracle HCM URLs</label>
             <textarea
-              value={urls}
-              onChange={(e) => setUrls(e.target.value)}
-              rows={5}
-              placeholder={"Paste Oracle HCM job URLs, one per line:\nhttps://egup.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/20265195"}
-              className="field-input font-mono text-[12px] leading-relaxed"
-              disabled={running}
+              value={urls} onChange={(e) => setUrls(e.target.value)} rows={5}
+              placeholder="Paste Oracle HCM job URLs, one per line"
+              className="field-input font-mono text-[12px] leading-relaxed" disabled={running}
             />
             <span className="text-[11px] text-gray-400 mt-1 block">{urlList.length} URLs detected</span>
           </div>
@@ -197,15 +352,11 @@ export default function BatchScrape() {
       {/* Action */}
       <div className="flex gap-3">
         <button
-          onClick={mode === 'crawl' ? runCrawlAll : runUrlBatch}
-          disabled={running || (mode === 'urls' && urlList.length === 0)}
+          onClick={runHandler}
+          disabled={running || !canRun}
           className="flex-1 py-3.5 px-4 bg-vertiv text-white font-semibold text-[15px] rounded-lg hover:bg-vertiv-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
         >
-          {running
-            ? progress || 'Processing...'
-            : mode === 'crawl'
-              ? `Crawl & Audit ${limit} Postings`
-              : `Audit ${urlList.length} URLs`}
+          {btnLabel}
         </button>
         {doneCount > 0 && !running && (
           <button
@@ -233,7 +384,7 @@ export default function BatchScrape() {
               <span className="font-semibold">{summary.audited}</span> audited
               {summary.skipped > 0 && <span className="text-gray-400"> / {summary.skipped} skipped</span>}
               {summary.errors > 0 && <span className="text-vertiv"> / {summary.errors} errors</span>}
-              <span className="text-gray-400"> of {summary.total_jobs.toLocaleString()} total</span>
+              <span className="text-gray-400"> of {summary.total_jobs?.toLocaleString()} total</span>
               <span className="text-gray-300 mx-2">|</span>
               <span className="text-gray-500">{summary.total_findings} findings</span>
               <span className="text-gray-300 mx-2">|</span>
@@ -304,6 +455,14 @@ export default function BatchScrape() {
         </div>
       )}
     </div>
+  )
+}
+
+function UploadIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+    </svg>
   )
 }
 

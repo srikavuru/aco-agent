@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import AuditForm from './components/AuditForm'
 import AuditResult from './components/AuditResult'
 import AuditHistory from './components/AuditHistory'
@@ -29,6 +29,10 @@ const ROLE_TYPES = [
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://aco-agent-func.azurewebsites.net'
 
+function warmup() {
+  fetch(`${API_BASE}/api/warmup`).catch(() => {})
+}
+
 export default function App() {
   const [tab, setTab] = useState('audit')
   const [result, setResult] = useState(null)
@@ -36,6 +40,8 @@ export default function App() {
   const [error, setError] = useState(null)
   const [history, setHistory] = useState([])
   const [scrapedMeta, setScrapedMeta] = useState(null)
+
+  useEffect(() => { warmup() }, [])
 
   async function handleSubmit(payload) {
     setLoading(true)
@@ -104,7 +110,7 @@ export default function App() {
             Audit
           </button>
           <button
-            onClick={() => setTab('batch')}
+            onClick={() => { setTab('batch'); warmup() }}
             className={`px-5 py-2.5 text-[12px] font-semibold uppercase tracking-wider border-b-2 transition-colors ${
               tab === 'batch'
                 ? 'border-vertiv text-vertiv'

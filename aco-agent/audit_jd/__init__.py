@@ -24,6 +24,8 @@ import azure.functions as func
 
 from shared.rule_engine import RuleEngine
 from shared.audit_certificate import build_certificate
+from shared.persist import save_certificate
+from shared.notifier import notify_if_needed
 
 logger = logging.getLogger(__name__)
 
@@ -135,6 +137,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             "source_url": scraped.get("source_url", ""),
             "job_description_length": len(job_description),
         }
+
+    save_certificate(certificate)
+    notify_if_needed(certificate)
 
     logger.info(
         "Audit complete: %s | Status: %s | Critical: %d | High: %d%s",
