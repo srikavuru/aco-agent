@@ -1,5 +1,13 @@
 name: Deploy Azure Function
 
+# Function deploys use `func azure functionapp publish` from local.
+# The functions-action zip deploy is incompatible with Linux Consumption
+# plan's squashfs deployment method. Use the manual deploy command:
+#
+#   cd aco-agent && func azure functionapp publish aco-agent-func --python
+#
+# This workflow runs tests on push to validate the backend code.
+
 on:
   push:
     branches: [master]
@@ -9,7 +17,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,16 +29,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd aco-agent
-          pip install --target=".python_packages/lib/site-packages" \
-            --extra-index-url https://download.pytorch.org/whl/cpu \
-            -r requirements.txt
+          pip install --extra-index-url https://download.pytorch.org/whl/cpu \
+            -r aco-agent/requirements.txt
+          pip install pytest
 
-      - name: Deploy to Azure Functions
-        uses: Azure/functions-action@v1
-        with:
-          app-name: aco-agent-func
-          package: aco-agent
-          publish-profile: ${{ secrets.AZURE_FUNCTION_PUBLISH_PROFILE }}
-          scm-do-build-remote: false
-          enable-oryx-build: false
+      - name: Run tests
+        run: cd aco-agent && python -m pytest tests/ -v
