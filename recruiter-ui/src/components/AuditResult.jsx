@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import SeverityBadge from './SeverityBadge'
+import ComplianceDonut from './ComplianceDonut'
 import FindingCard from './FindingCard'
 import { REMEDIATION_TEMPLATES } from './FindingCard'
 import generatePdf from './generatePdf'
@@ -88,26 +89,16 @@ export default function AuditResult({ certificate }) {
     <div className="mt-6 space-y-4">
       {/* Status banner */}
       <div className={`${status.bg} border border-gray-200/60 border-l-4 ${status.border} rounded-lg p-5 shadow-sm`}>
-        <div className="flex items-start justify-between gap-4">
-          <div>
+        <div className="flex items-center justify-between gap-5">
+          <div className="flex-1">
             <div className={`text-[22px] font-bold tracking-tight ${status.text}`}>{status.label}</div>
             <p className="text-[13px] text-gray-500 mt-0.5">{status.description}</p>
           </div>
-          <div className="text-right shrink-0">
-            <div className="text-[14px] font-bold text-gray-800">
-              {complianceScore}%
-            </div>
-            <div className="text-[11px] text-gray-400">
-              {rulesPassed}/{rulesEvaluated} passed
-            </div>
-          </div>
-        </div>
-
-        {/* Progress bar */}
-        <div className="mt-3 h-1.5 bg-white/70 rounded-full overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all ${status.barColor}`}
-            style={{ width: `${complianceScore}%` }}
+          <ComplianceDonut
+            score={complianceScore}
+            passed={rulesPassed}
+            total={rulesEvaluated}
+            status={audit_result.overall_status}
           />
         </div>
 
