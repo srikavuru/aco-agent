@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated": "2024-01-01",
+  "last_updated": "2026-06-25",
   "maintained_by": "Legal / HR Compliance",
   "rule_categories": {
 
@@ -132,7 +132,7 @@
         {
           "rule_id": "ST-001",
           "name": "Pay Range Disclosure — Mandatory States",
-          "required_in_regions": ["CA", "CO", "NY", "WA", "IL", "MA", "NJ", "CT"],
+          "required_in_regions": ["CA", "CO", "CT", "DC", "HI", "IL", "MA", "MD", "ME", "MN", "NJ", "NY", "NYC", "OH", "VA", "VT", "WA"],
           "severity": "CRITICAL",
           "match_type": "regex",
           "patterns": [
@@ -140,20 +140,84 @@
             "[\\d,]+\\s*per\\s*(hour|year|annum)",
             "salary range",
             "compensation range",
-            "pay range"
+            "pay range",
+            "anticipated salary",
+            "anticipated pay"
           ],
-          "failure_message": "No salary/pay range detected. This posting appears to target a mandatory disclosure state. A specific compensation range MUST be included before posting in CA, CO, NY, WA, IL, MA, NJ, or CT.",
-          "legal_citation": "CO SB21-085; NY Labor Law §194-b; CA Labor Code §432.3; WA SB 5761"
+          "failure_message": "No salary/pay range detected. This posting appears to target a mandatory disclosure state. A specific compensation range (e.g. '$X to $Y per year/hour') MUST be included before posting in CA, CO, CT, DC, HI, IL, MA, MD, ME, MN, NJ, NY, NYC, OH (Cleveland), VA, VT, or WA.",
+          "legal_citation": "CO SB21-085; NY Labor Law §194-b; CA Labor Code §432.3; WA SB 5761; CT Public Act 21-30; IL 820 ILCS 112/10; MD HB 123; MN SF 2909; HI SB 1057; VA Code §40.1-28.7:3"
         },
         {
           "rule_id": "ST-002",
           "name": "Benefits Disclosure",
-          "required_in_regions": ["CO", "WA"],
+          "required_in_regions": ["CA", "CO", "CT", "DC", "HI", "IL", "MA", "MD", "ME", "MN", "NJ", "NY", "NYC", "OH", "VA", "VT", "WA"],
           "severity": "HIGH",
           "match_type": "semantic",
           "semantic_threshold": 0.65,
-          "canonical_text": "Benefits include health insurance, dental, vision, 401(k), paid time off.",
-          "failure_message": "Benefits summary missing. CO and WA require general benefits description alongside pay range."
+          "canonical_text": "The role is eligible to participate in a comprehensive and competitive benefits program, including medical, dental, vision, disability, PTO, holiday pay, and 401k.",
+          "allowed_variants": [
+            "benefits program",
+            "medical, dental, vision",
+            "401k",
+            "paid time off"
+          ],
+          "failure_message": "Benefits summary missing. Pay transparency states require a general benefits description alongside the pay range. Include medical, dental, vision, disability, PTO, holiday pay, and 401k details."
+        },
+        {
+          "rule_id": "ST-003",
+          "name": "Colorado Application Deadline Requirement",
+          "required_in_regions": ["CO"],
+          "severity": "HIGH",
+          "match_type": "regex",
+          "patterns": [
+            "deadline to submit an application",
+            "accepts applications on an ongoing basis",
+            "application deadline",
+            "submit an application.*(date|ongoing)"
+          ],
+          "failure_message": "Colorado requires an application deadline statement. For standard postings, include 'The estimated deadline to submit an application for this role is [DATE].' For evergreen postings, include 'This role accepts applications on an ongoing basis.'",
+          "legal_citation": "CO SB21-085"
+        },
+        {
+          "rule_id": "ST-004",
+          "name": "Pay Transparency Locality Reference",
+          "required_in_regions": ["CA", "CO", "CT", "DC", "HI", "IL", "MA", "MD", "ME", "MN", "NJ", "NY", "NYC", "OH", "VA", "VT", "WA"],
+          "severity": "HIGH",
+          "match_type": "regex",
+          "patterns": [
+            "in the .* locality",
+            "in the State of",
+            "for this role in",
+            "ranges for other geographic localities may vary"
+          ],
+          "failure_message": "Pay transparency language must reference the specific state/locality (e.g. 'The anticipated salary range for this role in the [STATE] locality is...'). Ranges for other geographic localities may vary and this should be noted.",
+          "legal_citation": "State pay transparency statutes require locality-specific compensation disclosure"
+        },
+        {
+          "rule_id": "ST-005",
+          "name": "Washington State Benefits Detail",
+          "required_in_regions": ["WA"],
+          "severity": "HIGH",
+          "match_type": "semantic",
+          "semantic_threshold": 0.65,
+          "canonical_text": "The role is eligible to participate in a comprehensive and competitive benefits program, including medical, dental, vision, disability, PTO (Flexible or up to accrued x number of days a year), holiday pay (9 days), and 401k.",
+          "allowed_variants": [
+            "PTO (Flexible or up to accrued",
+            "9 paid holidays",
+            "holiday pay (9 days)"
+          ],
+          "failure_message": "Washington State requires enhanced benefits disclosure including specific PTO details (Flexible or accrued days) and holiday count (9 days). Standard benefits language is insufficient for WA postings.",
+          "legal_citation": "WA SB 5761"
+        },
+        {
+          "rule_id": "ST-006",
+          "name": "Interview-Only Pay Disclosure States",
+          "description": "NV and RI require salary range disclosure during the interview process but not in the job description. This is an informational flag.",
+          "required_in_regions": ["NV", "RI"],
+          "severity": "LOW",
+          "match_type": "keyword",
+          "keywords": ["__PAY_TRANSPARENCY_INTERVIEW_DISCLOSURE_ACKNOWLEDGED__"],
+          "failure_message": "This posting targets NV or RI. These states require pay range disclosure during the interview process (not in the JD). Ensure hiring teams are prepared to provide salary range information to candidates upon request or at interview."
         }
       ]
     },
