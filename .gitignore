@@ -31,3 +31,7 @@ Thumbs.db
 # Build artifacts
 dist/
 .pytest_cache/
+
+# Scraper output (generated data)
+scrapers/output/*.json
+scrapers/output/*.csv
