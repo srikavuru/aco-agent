@@ -39,8 +39,10 @@ Requirements:
 - BSEE required; PE license preferred
 - Familiarity with NEC, UL 891, IEC 61439
 
-Salary: $110,000 – $135,000 annually. Benefits include medical, dental, vision, 
-401(k) with match, paid parental leave, and tuition reimbursement.
+The anticipated salary range for this role in the Ohio locality is between $110,000
+to $135,000 per year—salary ranges for other geographic localities may vary. The role
+is eligible to participate in a comprehensive and competitive benefits program,
+including medical, dental, vision, disability, PTO, holiday pay, and 401k.
 
 Vertiv is an Equal Opportunity/Affirmative Action employer. We promote equal 
 opportunity for all applicants regardless of race, color, religion, sex, national 
