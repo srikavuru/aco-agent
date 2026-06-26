@@ -3,6 +3,57 @@ import SeverityBadge from './SeverityBadge'
 const TIMELINE = [
   {
     date: 'June 25, 2026',
+    tag: 'NEW',
+    tagColor: 'bg-vertiv',
+    title: 'Reporting Dashboard & Agent Infrastructure',
+    subtitle: 'Compliance analytics, embedding cache, CosmosDB persistence, email notifications.',
+    sections: [
+      {
+        heading: 'Reporting Dashboard',
+        content: (
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {[
+              { label: 'KPI Cards', desc: 'Postings audited, avg compliance score, total findings, critical issues' },
+              { label: 'Status Breakdown', desc: 'Donut chart + horizontal bars showing BLOCKED/REVIEW/ADVISORY/APPROVED mix' },
+              { label: 'Severity Distribution', desc: 'CRITICAL/HIGH/MEDIUM/LOW proportional bars across all audited postings' },
+              { label: 'Top Violations', desc: 'Ranked list of most-triggered rules with hit counts' },
+              { label: 'Category Analysis', desc: 'Findings by category — disclaimers, transparency, language, structure, export' },
+              { label: 'Spreadsheet Upload', desc: 'Upload CSV/Excel with req numbers, auto-audit each against the live site' },
+            ].map(item => (
+              <div key={item.label} className="flex items-start gap-2 bg-gray-50/80 rounded-lg px-3 py-2">
+                <div>
+                  <div className="text-[11px] font-semibold text-gray-700">{item.label}</div>
+                  <div className="text-[10px] text-gray-400">{item.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ),
+      },
+      {
+        heading: 'Performance & Infrastructure',
+        content: (
+          <div className="mt-2 space-y-2">
+            {[
+              { label: 'Embedding Cache', desc: '33 pre-computed embeddings for canonical rule texts. Second audit drops from 200ms to 40ms.' },
+              { label: 'Auto-Warmup', desc: 'App pre-loads semantic model on page load and before batch operations. Keep-warm cron every 15 min during business hours.' },
+              { label: 'CosmosDB Persistence', desc: 'Fire-and-forget background writes. Every audit certificate saved with 7-year TTL for legal hold.' },
+              { label: 'Email Notifications', desc: 'SendGrid alerts for BLOCKED/REVIEW_REQUIRED results — structured HTML with findings table.' },
+            ].map(item => (
+              <div key={item.label} className="flex items-start gap-2 bg-gray-50/80 rounded-lg px-3 py-2">
+                <div>
+                  <div className="text-[11px] font-semibold text-gray-700">{item.label}</div>
+                  <div className="text-[10px] text-gray-400">{item.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ),
+      },
+    ],
+  },
+  {
+    date: 'June 25, 2026',
     tag: 'SAME-DAY',
     tagColor: 'bg-emerald-500',
     title: 'Pay Transparency V14 — 17 States Now Enforced',

@@ -5,6 +5,7 @@ import AuditHistory from './components/AuditHistory'
 import BatchScrape from './components/BatchScrape'
 import ComplianceRules from './components/ComplianceRules'
 import WhatsNew from './components/WhatsNew'
+import ReportingDashboard from './components/ReportingDashboard'
 
 const REGIONS = [
   { value: 'OH', label: 'Ohio' },
@@ -191,35 +192,7 @@ export default function App() {
         {tab === 'whats-new' && <WhatsNew />}
 
         {tab === 'reporting' && (
-          result ? (
-            <>
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200/80 px-5 py-3 mb-4 flex items-center justify-between">
-                <div>
-                  <div className="text-[15px] font-bold text-gray-900">{result.posting?.title}</div>
-                  <div className="text-[12px] text-gray-400 mt-0.5">
-                    {result.posting?.req_number && <span className="font-mono">{result.posting.req_number}</span>}
-                    {result.posting?.req_number && <span className="mx-2 text-gray-200">|</span>}
-                    Audited {new Date(result.audited_at).toLocaleDateString()} at {new Date(result.audited_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
-                <div className="text-[10px] text-gray-300 uppercase tracking-widest">Compliance Report</div>
-              </div>
-              <AuditResult certificate={result} />
-            </>
-          ) : (
-            <div className="mt-12 text-center">
-              <div className="text-[48px] text-gray-200 mb-4">
-                <svg className="w-16 h-16 mx-auto text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div className="text-[14px] text-gray-400 font-medium">No audit to display</div>
-              <div className="text-[12px] text-gray-300 mt-1">
-                Run an audit from the <button onClick={() => setTab('audit')} className="text-vertiv underline font-semibold">Audit</button> tab first,
-                then switch here to present the results.
-              </div>
-            </div>
-          )
+          <ReportingDashboard result={result} history={history} onTabSwitch={setTab} />
         )}
       </main>
 
