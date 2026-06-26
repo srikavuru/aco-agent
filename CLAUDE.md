@@ -48,11 +48,16 @@ Shared modules at `aco-agent/shared/`:
 
 ### Frontend — `recruiter-ui/`
 
-Vite + React + Tailwind app. Vite proxies `/api` to `localhost:7071`. Components:
+Vite + React + Tailwind app. Vite proxies `/api` to `localhost:7071`. Tabs: Audit, Batch Scrape, Rules, What's New, Reporting. Components:
 - `AuditForm` — JD paste textarea, posting title, req number, region/role selects
 - `AuditResult` — Status banner with severity count pills, req number display
 - `FindingCard` — Per-finding detail with severity badge, matched terms, legal citation, one-click remediation copy
 - `SeverityBadge` — Color-coded CRITICAL/HIGH/MEDIUM/LOW badge
+- `ComplianceRules` — All audit rules organized by category with severity badges and publish gate legend
+- `WhatsNew` — Timeline-style changelog showcasing policy updates (e.g. V14 pay transparency)
+- `BatchScrape` — Batch JD scraping interface
+- `ComplianceDonut` — Donut chart for compliance visualization
+- `AuditHistory` — Recent audit session history
 
 ## Key Data Files
 
@@ -61,6 +66,16 @@ Vite + React + Tailwind app. Vite proxies `/api` to `localhost:7071`. Components
 - **`data/prohibited_language/prohibited_terms.json`** — Banned terms list (age bias, national origin, etc.).
 - **`data/templates/golden_template_engineer.txt`** — Reference compliant JD for semantic comparison.
 - **`docs/orc-webhook-payload-sample.json`** — Sample ORC webhook payload showing all mapped fields.
+
+## Deployment
+
+- **Pushing to `master` triggers two GitHub Actions workflows automatically:**
+  - **Deploy Static Web App** — builds and deploys `recruiter-ui/` to Azure Static Web Apps (~1 min)
+  - **Deploy Azure Function** — deploys `aco-agent/` to Azure Functions
+- **Keep Function Warm** — scheduled workflow that pings the function app every ~2 hours to prevent cold starts
+- **Live site:** `aco-agent-func.azurewebsites.net` (backend API) + Azure Static Web App (frontend)
+- **To get changes live:** merge to `master` (or push directly) — do NOT stay on a feature branch expecting the live site to update
+- PR branches do not trigger deploys
 
 ## Design Constraints
 
