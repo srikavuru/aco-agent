@@ -4,6 +4,7 @@ import AuditResult from './components/AuditResult'
 import AuditHistory from './components/AuditHistory'
 import BatchScrape from './components/BatchScrape'
 import ComplianceRules from './components/ComplianceRules'
+import WhatsNew from './components/WhatsNew'
 
 const REGIONS = [
   { value: 'OH', label: 'Ohio' },
@@ -131,6 +132,16 @@ export default function App() {
             Rules
           </button>
           <button
+            onClick={() => setTab('whats-new')}
+            className={`px-5 py-2.5 text-[12px] font-semibold uppercase tracking-wider border-b-2 transition-colors ${
+              tab === 'whats-new'
+                ? 'border-vertiv text-vertiv'
+                : 'border-transparent text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            What's New
+          </button>
+          <button
             onClick={() => setTab('reporting')}
             className={`px-5 py-2.5 text-[12px] font-semibold uppercase tracking-wider border-b-2 transition-colors ${
               tab === 'reporting'
@@ -176,6 +187,8 @@ export default function App() {
         {tab === 'batch' && <BatchScrape />}
 
         {tab === 'rules' && <ComplianceRules />}
+
+        {tab === 'whats-new' && <WhatsNew />}
 
         {tab === 'reporting' && (
           result ? (
