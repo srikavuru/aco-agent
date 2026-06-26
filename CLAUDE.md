@@ -84,6 +84,7 @@ Vite + React + Tailwind app. Vite proxies `/api` to `localhost:7071`. Tabs: Audi
 - The `legal_record` block in every certificate must always show `decision_authority: HUMAN_RECRUITER` and `tool_type: DECISION_SUPPORT`.
 - Audit Certificate schema is versioned — breaking changes require bumping `AUDIT_CERT_VERSION` and a CosmosDB migration plan.
 - `local.settings.json` contains secrets — never commit it.
+- When adding features or changing rules, update the `TIMELINE` array in `recruiter-ui/src/components/WhatsNew.jsx` in the same commit. This is the user-facing changelog — it should always reflect what's live.
 
 ## Roadmap (Not Yet Built)
 
