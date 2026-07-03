@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, Fragment } from 'react'
 import * as XLSX from 'xlsx'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://aco-agent-func.azurewebsites.net'
@@ -13,6 +13,13 @@ async function ensureWarm(setProgress) {
       if (data.ms > 5000) setProgress(`Engine warm (${Math.round(data.ms / 1000)}s cold start). Starting audit...`)
     }
   } catch {}
+}
+
+const SEV_BADGE = {
+  CRITICAL: 'bg-sev-critical-bg text-sev-critical',
+  HIGH: 'bg-sev-high-bg text-sev-high',
+  MEDIUM: 'bg-sev-medium-bg text-sev-medium',
+  LOW: 'bg-sev-low-bg text-sev-low',
 }
 
 const STATUS_COLORS = {
@@ -46,6 +53,7 @@ export default function BatchScrape() {
   const [summary, setSummary] = useState(null)
   const [running, setRunning] = useState(false)
   const [progress, setProgress] = useState('')
+  const [expandedRow, setExpandedRow] = useState(null)
 
   // Upload Reqs state
   const [fileData, setFileData] = useState(null)   // { headers: [], rows: [] }
@@ -418,37 +426,101 @@ export default function BatchScrape() {
             </thead>
             <tbody>
               {results.map((r, i) => (
-                <tr key={i} className="border-t border-gray-50 hover:bg-gray-50/50">
-                  <td className="px-5 py-2.5 text-gray-300 text-[11px]">{i + 1}</td>
-                  <td className="px-3 py-2.5 truncate max-w-[250px]">
-                    {r.error
-                      ? <span className="text-vertiv text-[12px]" title={r.error}>{r.error}</span>
-                      : <span className="text-gray-800">{r.title}</span>}
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-[11px] text-gray-400">{r.req_number || '—'}</td>
-                  <td className="px-3 py-2.5 text-gray-400 text-[12px]">{r.region || '—'}</td>
-                  <td className="px-3 py-2.5">
-                    {r.overall_status && (
-                      <span className={`font-bold text-[11px] uppercase ${STATUS_COLORS[r.overall_status] || ''}`}>
-                        {r.overall_status}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-3 py-2.5 text-center text-[12px] text-gray-500">
-                    {r.overall_status ? `${r.compliance_score}%` : ''}
-                  </td>
-                  <td className="px-5 py-2.5 text-right">
-                    {r.counts && (
-                      <span className="inline-flex gap-1.5 text-[11px]">
-                        {r.counts.CRITICAL > 0 && <span className="text-sev-critical font-bold">{r.counts.CRITICAL}C</span>}
-                        {r.counts.HIGH > 0 && <span className="text-sev-high font-bold">{r.counts.HIGH}H</span>}
-                        {r.counts.MEDIUM > 0 && <span className="text-sev-medium">{r.counts.MEDIUM}M</span>}
-                        {r.counts.LOW > 0 && <span className="text-sev-low">{r.counts.LOW}L</span>}
-                        {r.findings_count === 0 && <span className="text-approved font-medium">Clean</span>}
-                      </span>
-                    )}
-                  </td>
-                </tr>
+                <Fragment key={i}>
+                  <tr
+                    className={`border-t border-gray-50 cursor-pointer transition-colors ${
+                      expandedRow === i ? 'bg-gray-50' : 'hover:bg-gray-50/50'
+                    }`}
+                    onClick={() => setExpandedRow(expandedRow === i ? null : i)}
+                  >
+                    <td className="px-5 py-2.5 text-gray-300 text-[11px]">{i + 1}</td>
+                    <td className="px-3 py-2.5 max-w-[220px]">
+                      <div className="flex items-center gap-1.5">
+                        <ChevronIcon open={expandedRow === i} />
+                        {r.error
+                          ? <span className="text-vertiv text-[12px] truncate" title={r.error}>{r.error}</span>
+                          : <span className="text-gray-800 truncate">{r.title}</span>}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2.5 font-mono text-[11px]">
+                      {r.req_number
+                        ? (
+                          <a
+                            href={`${ORC_BASE}/${r.req_number}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-vertiv hover:underline"
+                          >
+                            {r.req_number}
+                          </a>
+                        )
+                        : <span className="text-gray-400">—</span>
+                      }
+                    </td>
+                    <td className="px-3 py-2.5 text-gray-400 text-[12px]">{r.region || '—'}</td>
+                    <td className="px-3 py-2.5">
+                      {r.overall_status && (
+                        <span className={`font-bold text-[11px] uppercase ${STATUS_COLORS[r.overall_status] || ''}`}>
+                          {r.overall_status.replace('_', ' ')}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5 text-center text-[12px] text-gray-500">
+                      {r.overall_status ? `${r.compliance_score}%` : ''}
+                    </td>
+                    <td className="px-5 py-2.5 text-right">
+                      {r.counts && (
+                        <span className="inline-flex gap-1.5 text-[11px]">
+                          {r.counts.CRITICAL > 0 && <span className="text-sev-critical font-bold">{r.counts.CRITICAL}C</span>}
+                          {r.counts.HIGH > 0 && <span className="text-sev-high font-bold">{r.counts.HIGH}H</span>}
+                          {r.counts.MEDIUM > 0 && <span className="text-sev-medium">{r.counts.MEDIUM}M</span>}
+                          {r.counts.LOW > 0 && <span className="text-sev-low">{r.counts.LOW}L</span>}
+                          {r.findings_count === 0 && <span className="text-approved font-medium">Clean</span>}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+
+                  {/* Expanded findings row */}
+                  {expandedRow === i && (
+                    <tr className="bg-gray-50/80">
+                      <td colSpan={7} className="px-6 pb-4 pt-1">
+                        {r.certificate?.findings?.length > 0 ? (
+                          <div className="space-y-1.5">
+                            {r.certificate.findings.map((f, fi) => (
+                              <div key={fi} className="flex items-start gap-3 bg-white rounded-lg border border-gray-100 px-4 py-2.5">
+                                <span className={`shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded mt-0.5 ${SEV_BADGE[f.severity] || 'bg-gray-100 text-gray-500'}`}>
+                                  {f.severity}
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-mono text-gray-400">{f.rule_id}</span>
+                                    <span className="text-[12px] font-semibold text-gray-800">{f.rule_name}</span>
+                                  </div>
+                                  {f.matched_text && (
+                                    <div className="text-[11px] text-gray-400 mt-0.5 truncate">"{f.matched_text}"</div>
+                                  )}
+                                </div>
+                                {f.remediation && (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(f.remediation) }}
+                                    title="Copy remediation"
+                                    className="shrink-0 text-[10px] text-gray-300 hover:text-vertiv transition-colors"
+                                  >
+                                    <CopyIcon />
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-[12px] text-approved font-medium py-1">No findings — posting is compliant</div>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               ))}
             </tbody>
           </table>
@@ -470,6 +542,25 @@ function CsvIcon() {
   return (
     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
+  )
+}
+
+function ChevronIcon({ open }) {
+  return (
+    <svg
+      className={`w-3 h-3 shrink-0 text-gray-300 transition-transform ${open ? 'rotate-90' : ''}`}
+      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+    </svg>
+  )
+}
+
+function CopyIcon() {
+  return (
+    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
     </svg>
   )
 }
