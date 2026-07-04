@@ -1,5 +1,6 @@
 import { useState, useRef, Fragment } from 'react'
 import * as XLSX from 'xlsx'
+import { REMEDIATION_TEMPLATES } from './FindingCard'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://aco-agent-func.azurewebsites.net'
 const ORC_BASE = 'https://egup.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job'
@@ -53,7 +54,9 @@ export default function BatchScrape() {
   const [summary, setSummary] = useState(null)
   const [running, setRunning] = useState(false)
   const [progress, setProgress] = useState('')
+  const [batchError, setBatchError] = useState('')
   const [expandedRow, setExpandedRow] = useState(null)
+  const [copiedFinding, setCopiedFinding] = useState(null)
 
   // Upload Reqs state
   const [fileData, setFileData] = useState(null)   // { headers: [], rows: [] }
@@ -95,32 +98,35 @@ export default function BatchScrape() {
   }
 
   // ── Run methods ────────────────────────────────────────────────────────
-  async function runReqBatch() {
-    if (reqNumbers.length === 0) return
+  function startRun() {
     setRunning(true)
     setResults([])
     setSummary(null)
-    await ensureWarm(setProgress)
+    setBatchError('')
+    setExpandedRow(null)
+  }
 
+  // Audits a list of { url, req_number?, fallbackTitle } sequentially,
+  // streaming results into the table as each completes.
+  async function runSequentialBatch(items, progressLabel) {
+    startRun()
+    await ensureWarm(setProgress)
     const batchResults = []
-    for (let i = 0; i < reqNumbers.length; i++) {
-      const req = reqNumbers[i]
-      setProgress(`Auditing ${i + 1}/${reqNumbers.length}: ${req}`)
-      const url = `${ORC_BASE}/${req}`
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      setProgress(`Auditing ${i + 1}/${items.length}${progressLabel ? `: ${progressLabel(item)}` : '...'}`)
       try {
         const res = await fetch(`${API_BASE}/api/audit`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url }),
+          body: JSON.stringify({ url: item.url }),
         })
         const data = await res.json()
-        if (!res.ok) {
-          batchResults.push({ req_number: req, title: `Req ${req}`, error: data.error, overall_status: '' })
-        } else {
-          batchResults.push(parseResult(data))
-        }
+        batchResults.push(res.ok
+          ? parseResult(data)
+          : { req_number: item.req_number || '', title: item.fallbackTitle, error: data.error, overall_status: '' })
       } catch (err) {
-        batchResults.push({ req_number: req, title: `Req ${req}`, error: err.message, overall_status: '' })
+        batchResults.push({ req_number: item.req_number || '', title: item.fallbackTitle, error: err.message, overall_status: '' })
       }
       setResults([...batchResults])
     }
@@ -128,10 +134,23 @@ export default function BatchScrape() {
     setRunning(false)
   }
 
+  function runReqBatch() {
+    if (reqNumbers.length === 0) return
+    return runSequentialBatch(
+      reqNumbers.map((req) => ({ url: `${ORC_BASE}/${req}`, req_number: req, fallbackTitle: `Req ${req}` })),
+      (item) => item.req_number,
+    )
+  }
+
+  function runUrlBatch() {
+    if (urlList.length === 0) return
+    return runSequentialBatch(
+      urlList.map((url) => ({ url, fallbackTitle: url.slice(-20) })),
+    )
+  }
+
   async function runCrawlAll() {
-    setRunning(true)
-    setResults([])
-    setSummary(null)
+    startRun()
     await ensureWarm(setProgress)
     setProgress(`Crawling ${limit} postings from Vertiv careers...`)
     try {
@@ -141,7 +160,7 @@ export default function BatchScrape() {
         body: JSON.stringify({ limit, offset: 0 }),
       })
       const data = await res.json()
-      if (!res.ok) { setProgress(`Error: ${data.error || res.status}`); setRunning(false); return }
+      if (!res.ok) { setBatchError(`Crawl failed: ${data.error || `server error (${res.status})`}`); return }
       const audited = (data.results || []).filter((r) => r.audit_result)
       setResults(audited.map(parseResult))
       setSummary({
@@ -150,33 +169,14 @@ export default function BatchScrape() {
         status_breakdown: data.summary?.status_breakdown || {},
         total_findings: data.summary?.total_findings || 0,
       })
-      setProgress('')
-    } catch (err) { setProgress(`Error: ${err.message}`) }
-    finally { setRunning(false) }
+    } catch (err) { setBatchError(`Crawl failed: ${err.message}`) }
+    finally { setProgress(''); setRunning(false) }
   }
 
-  async function runUrlBatch() {
-    if (urlList.length === 0) return
-    setRunning(true)
-    setResults([])
-    setSummary(null)
-    await ensureWarm(setProgress)
-    const batchResults = []
-    for (let i = 0; i < urlList.length; i++) {
-      setProgress(`Auditing ${i + 1}/${urlList.length}...`)
-      try {
-        const res = await fetch(`${API_BASE}/api/audit`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: urlList[i] }),
-        })
-        const data = await res.json()
-        batchResults.push(res.ok ? parseResult(data) : { title: urlList[i].slice(-20), error: data.error, overall_status: '' })
-      } catch (err) { batchResults.push({ title: urlList[i].slice(-20), error: err.message, overall_status: '' }) }
-      setResults([...batchResults])
-    }
-    setProgress('')
-    setRunning(false)
+  function copyRemediation(key, text) {
+    navigator.clipboard.writeText(text)
+    setCopiedFinding(key)
+    setTimeout(() => setCopiedFinding((cur) => (cur === key ? null : cur)), 1500)
   }
 
   function exportCsv() {
@@ -384,6 +384,13 @@ export default function BatchScrape() {
         </div>
       )}
 
+      {/* Batch error */}
+      {batchError && !running && (
+        <div className="px-4 py-3 bg-vertiv-bg border-l-4 border-vertiv rounded-r-lg text-[13px] text-vertiv font-medium">
+          {batchError}
+        </div>
+      )}
+
       {/* Summary banner */}
       {summary && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200/80 p-4">
@@ -488,31 +495,46 @@ export default function BatchScrape() {
                       <td colSpan={7} className="px-6 pb-4 pt-1">
                         {r.certificate?.findings?.length > 0 ? (
                           <div className="space-y-1.5">
-                            {r.certificate.findings.map((f, fi) => (
-                              <div key={fi} className="flex items-start gap-3 bg-white rounded-lg border border-gray-100 px-4 py-2.5">
-                                <span className={`shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded mt-0.5 ${SEV_BADGE[f.severity] || 'bg-gray-100 text-gray-500'}`}>
-                                  {f.severity}
-                                </span>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-mono text-gray-400">{f.rule_id}</span>
-                                    <span className="text-[12px] font-semibold text-gray-800">{f.rule_name}</span>
+                            {r.certificate.findings.map((f, fi) => {
+                              const remediation = REMEDIATION_TEMPLATES[f.remediation_template]
+                              const copyKey = `${i}-${fi}`
+                              return (
+                                <div key={fi} className="flex items-start gap-3 bg-white rounded-lg border border-gray-100 px-4 py-2.5">
+                                  <span className={`shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded mt-0.5 ${SEV_BADGE[f.severity] || 'bg-gray-100 text-gray-500'}`}>
+                                    {f.severity}
+                                  </span>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-mono text-gray-400">{f.rule_id}</span>
+                                      <span className="text-[12px] font-semibold text-gray-800">{f.rule_name}</span>
+                                    </div>
+                                    {f.failure_message && (
+                                      <div className="text-[11px] text-gray-400 mt-0.5">{f.failure_message}</div>
+                                    )}
+                                    {f.matched_terms?.length > 0 && (
+                                      <div className="mt-1 flex flex-wrap gap-1">
+                                        {f.matched_terms.map((term, ti) => (
+                                          <span key={ti} className="inline-flex px-1.5 py-0.5 bg-vertiv-bg text-vertiv text-[10px] rounded font-mono">
+                                            {term}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
-                                  {f.matched_text && (
-                                    <div className="text-[11px] text-gray-400 mt-0.5 truncate">"{f.matched_text}"</div>
+                                  {remediation && (
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); copyRemediation(copyKey, remediation) }}
+                                      title="Copy remediation"
+                                      className={`shrink-0 inline-flex items-center gap-1 text-[10px] font-semibold transition-colors ${
+                                        copiedFinding === copyKey ? 'text-approved' : 'text-gray-300 hover:text-vertiv'
+                                      }`}
+                                    >
+                                      {copiedFinding === copyKey ? <><CheckIcon /> Copied</> : <CopyIcon />}
+                                    </button>
                                   )}
                                 </div>
-                                {f.remediation && (
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(f.remediation) }}
-                                    title="Copy remediation"
-                                    className="shrink-0 text-[10px] text-gray-300 hover:text-vertiv transition-colors"
-                                  >
-                                    <CopyIcon />
-                                  </button>
-                                )}
-                              </div>
-                            ))}
+                              )
+                            })}
                           </div>
                         ) : (
                           <div className="text-[12px] text-approved font-medium py-1">No findings — posting is compliant</div>
@@ -561,6 +583,14 @@ function CopyIcon() {
   return (
     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
     </svg>
   )
 }

@@ -2,6 +2,35 @@ import SeverityBadge from './SeverityBadge'
 
 const TIMELINE = [
   {
+    date: 'July 4, 2026',
+    tag: 'NEW',
+    tagColor: 'bg-vertiv',
+    title: 'Batch Results Drill-Down',
+    subtitle: 'Inspect findings without leaving the batch results table.',
+    sections: [
+      {
+        heading: 'Batch Scrape Improvements',
+        content: (
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {[
+              { label: 'Expandable Rows', desc: 'Click any result row to see its findings inline — severity, rule, failure detail, and matched terms' },
+              { label: 'Live Posting Links', desc: 'Req numbers link directly to the posting on the Vertiv careers site' },
+              { label: 'One-Click Remediation', desc: 'Copy approved boilerplate language straight from an expanded finding' },
+              { label: 'Clearer Errors', desc: 'Failed crawls now surface an error banner instead of failing silently' },
+            ].map(item => (
+              <div key={item.label} className="flex items-start gap-2 bg-gray-50/80 rounded-lg px-3 py-2">
+                <div>
+                  <div className="text-[11px] font-semibold text-gray-700">{item.label}</div>
+                  <div className="text-[10px] text-gray-400">{item.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ),
+      },
+    ],
+  },
+  {
     date: 'June 25, 2026',
     tag: 'NEW',
     tagColor: 'bg-vertiv',
