@@ -5,9 +5,27 @@ const TIMELINE = [
     date: 'July 4, 2026',
     tag: 'NEW',
     tagColor: 'bg-vertiv',
-    title: 'Batch Results Drill-Down',
-    subtitle: 'Inspect findings without leaving the batch results table.',
+    title: 'Rule Proposals & Batch Results Drill-Down',
+    subtitle: 'Propose new compliance rules from the UI, and inspect batch findings inline.',
     sections: [
+      {
+        heading: 'Propose New Rules (Preview)',
+        content: (
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {[
+              { label: 'Propose Rule Button', desc: 'Anyone on the team can draft a rule from the Rules tab — name, category, severity, match strategy, legal citation' },
+              { label: 'Legal Sign-Off Gate', desc: 'Proposals are marked Pending Legal Review and never affect audits until approved and published to rules.json' },
+            ].map(item => (
+              <div key={item.label} className="flex items-start gap-2 bg-gray-50/80 rounded-lg px-3 py-2">
+                <div>
+                  <div className="text-[11px] font-semibold text-gray-700">{item.label}</div>
+                  <div className="text-[10px] text-gray-400">{item.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ),
+      },
       {
         heading: 'Batch Scrape Improvements',
         content: (

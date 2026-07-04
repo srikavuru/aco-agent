@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import SeverityBadge from './SeverityBadge'
 
 const CATEGORIES = [
@@ -94,12 +95,60 @@ const SEVERITY_GATE = {
   LOW: { label: 'INFO', desc: 'Publish at discretion.', color: 'text-sev-low' },
 }
 
+const MATCH_TYPES = [
+  { value: 'semantic', label: 'Semantic — meaning-based match against canonical text' },
+  { value: 'keyword_list', label: 'Keyword List — flag if any listed term appears' },
+  { value: 'keyword', label: 'Keyword — require a specific term to appear' },
+  { value: 'regex', label: 'Regex — pattern match (e.g. dollar ranges, dates)' },
+  { value: 'computed', label: 'Computed — derived check (e.g. character count)' },
+]
+
+const EMPTY_DRAFT = {
+  name: '',
+  category: 'REQUIRED_DISCLAIMERS',
+  severity: 'MEDIUM',
+  match_type: 'semantic',
+  desc: '',
+  legal_citation: '',
+}
+
 export default function ComplianceRules() {
+  const [showModal, setShowModal] = useState(false)
+  const [draft, setDraft] = useState(EMPTY_DRAFT)
+  const [submitted, setSubmitted] = useState(false)
+  const [pendingRules, setPendingRules] = useState([])
+
   const totalRules = CATEGORIES.reduce((sum, c) => sum + c.rules.length, 0)
   const severityCounts = {}
   CATEGORIES.forEach(c => c.rules.forEach(r => {
     severityCounts[r.severity] = (severityCounts[r.severity] || 0) + 1
   }))
+
+  const canSubmit = draft.name.trim() && draft.desc.trim()
+
+  function setField(field, value) {
+    setDraft((d) => ({ ...d, [field]: value }))
+  }
+
+  function submitProposal() {
+    if (!canSubmit) return
+    const prefix = { REQUIRED_DISCLAIMERS: 'RD', SALARY_TRANSPARENCY: 'ST', PROHIBITED_LANGUAGE: 'PL', STYLE_AND_STRUCTURE: 'SS', EXPORT_CONTROL: 'EC' }[draft.category]
+    const existing = CATEGORIES.find(c => c.id === draft.category).rules.length
+      + pendingRules.filter(r => r.category === draft.category).length
+    setPendingRules((prev) => [...prev, {
+      ...draft,
+      id: `${prefix}-${String(existing + 1).padStart(3, '0')}`,
+      name: draft.name.trim(),
+      desc: draft.desc.trim(),
+    }])
+    setSubmitted(true)
+  }
+
+  function closeModal() {
+    setShowModal(false)
+    setSubmitted(false)
+    setDraft(EMPTY_DRAFT)
+  }
 
   return (
     <div className="space-y-6">
@@ -112,13 +161,22 @@ export default function ComplianceRules() {
               {totalRules} rules across {CATEGORIES.length} categories — all sourced from <span className="font-mono text-gray-500">rules.json</span>
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map(sev => (
-              <div key={sev} className="flex items-center gap-1">
-                <SeverityBadge severity={sev} />
-                <span className="text-[11px] text-gray-400 font-mono">{severityCounts[sev] || 0}</span>
-              </div>
-            ))}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map(sev => (
+                <div key={sev} className="flex items-center gap-1">
+                  <SeverityBadge severity={sev} />
+                  <span className="text-[11px] text-gray-400 font-mono">{severityCounts[sev] || 0}</span>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-vertiv text-white text-[12px] font-semibold rounded-lg hover:bg-vertiv-hover transition-colors shadow-sm shrink-0"
+            >
+              <PlusIcon />
+              Propose Rule
+            </button>
           </div>
         </div>
       </div>
@@ -141,7 +199,10 @@ export default function ComplianceRules() {
       </div>
 
       {/* Category sections */}
-      {CATEGORIES.map(cat => (
+      {CATEGORIES.map(cat => {
+        const pending = pendingRules.filter(r => r.category === cat.id)
+        const ruleCount = cat.rules.length + pending.length
+        return (
         <div key={cat.id} className="bg-white rounded-lg shadow-sm border border-gray-200/80 overflow-hidden">
           {/* Category header */}
           <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/50">
@@ -151,7 +212,7 @@ export default function ComplianceRules() {
                 <h3 className="text-[13px] font-bold text-gray-900">{cat.name}</h3>
                 <p className="text-[11px] text-gray-400">{cat.description}</p>
               </div>
-              <span className="ml-auto text-[11px] text-gray-300 font-mono">{cat.rules.length} rule{cat.rules.length !== 1 ? 's' : ''}</span>
+              <span className="ml-auto text-[11px] text-gray-300 font-mono">{ruleCount} rule{ruleCount !== 1 ? 's' : ''}</span>
             </div>
           </div>
 
@@ -177,15 +238,175 @@ export default function ComplianceRules() {
                   </td>
                 </tr>
               ))}
+              {pending.map((rule) => (
+                <tr key={rule.id} className="bg-amber-50/40 hover:bg-amber-50/70 transition-colors">
+                  <td className="px-5 py-2.5 text-[11px] font-mono text-gray-400 align-top">{rule.id}</td>
+                  <td className="px-2 py-2.5 align-top">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[12px] font-semibold text-gray-800">{rule.name}</span>
+                      <span className="inline-flex px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-bold uppercase tracking-wider rounded">
+                        Pending Legal Review
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-gray-400 mt-0.5 leading-relaxed">{rule.desc}</div>
+                    {rule.legal_citation && (
+                      <div className="text-[11px] text-gray-400 italic mt-0.5">{rule.legal_citation}</div>
+                    )}
+                  </td>
+                  <td className="px-2 py-2.5 align-top">
+                    <SeverityBadge severity={rule.severity} />
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
-      ))}
+      )})}
 
       {/* Footer note */}
       <div className="text-center text-[11px] text-gray-300 py-2">
         Rules are maintained in <span className="font-mono">aco-agent/data/rules/rules.json</span> — no code changes required for updates.
       </div>
+
+      {/* Propose Rule modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={closeModal}>
+          <div className="absolute inset-0 bg-gray-900/40" />
+          <div
+            className="relative bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {!submitted ? (
+              <>
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-[15px] font-bold text-gray-900">Propose New Rule</h3>
+                    <p className="text-[11px] text-gray-400 mt-0.5">Proposals require Legal sign-off before enforcement</p>
+                  </div>
+                  <button onClick={closeModal} className="text-gray-300 hover:text-gray-500 transition-colors">
+                    <XIcon />
+                  </button>
+                </div>
+
+                <div className="px-6 py-4 space-y-4">
+                  <div>
+                    <label className="field-label">Rule Name</label>
+                    <input
+                      type="text"
+                      value={draft.name}
+                      onChange={(e) => setField('name', e.target.value)}
+                      placeholder="e.g. Remote Work Location Disclosure"
+                      className="field-input"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="field-label">Category</label>
+                      <select value={draft.category} onChange={(e) => setField('category', e.target.value)} className="field-input">
+                        {CATEGORIES.map(c => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="field-label">Severity</label>
+                      <select value={draft.severity} onChange={(e) => setField('severity', e.target.value)} className="field-input">
+                        {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map(s => (
+                          <option key={s} value={s}>{s} — {SEVERITY_GATE[s].label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="field-label">Match Strategy</label>
+                    <select value={draft.match_type} onChange={(e) => setField('match_type', e.target.value)} className="field-input">
+                      {MATCH_TYPES.map(m => (
+                        <option key={m.value} value={m.value}>{m.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="field-label">What should this rule check?</label>
+                    <textarea
+                      value={draft.desc}
+                      onChange={(e) => setField('desc', e.target.value)}
+                      rows={3}
+                      placeholder="Describe the requirement — e.g. remote-eligible postings must state the hiring states..."
+                      className="field-input leading-relaxed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="field-label">Legal Citation <span className="normal-case font-normal text-gray-300">(optional)</span></label>
+                    <input
+                      type="text"
+                      value={draft.legal_citation}
+                      onChange={(e) => setField('legal_citation', e.target.value)}
+                      placeholder="e.g. Colorado Equal Pay for Equal Work Act, C.R.S. 8-5-201"
+                      className="field-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                  <span className="text-[11px] text-gray-400">Severity gate: <span className={`font-bold ${SEVERITY_GATE[draft.severity].color}`}>{SEVERITY_GATE[draft.severity].label}</span></span>
+                  <div className="flex gap-2">
+                    <button onClick={closeModal} className="px-4 py-2 text-[12px] font-medium text-gray-500 hover:text-gray-700 transition-colors">
+                      Cancel
+                    </button>
+                    <button
+                      onClick={submitProposal}
+                      disabled={!canSubmit}
+                      className="px-4 py-2 bg-vertiv text-white text-[12px] font-semibold rounded-lg hover:bg-vertiv-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Submit for Legal Review
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="px-6 py-10 text-center">
+                <div className="w-14 h-14 mx-auto rounded-full bg-approved-bg flex items-center justify-center">
+                  <svg className="w-7 h-7 text-approved" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-[15px] font-bold text-gray-900 mt-4">Proposal Submitted</h3>
+                <p className="text-[12px] text-gray-400 mt-2 max-w-sm mx-auto leading-relaxed">
+                  Your rule has been routed to Legal for review. It appears in the rules list below
+                  as <span className="font-semibold text-amber-600">Pending Legal Review</span> and will not
+                  affect audits until approved and published to <span className="font-mono">rules.json</span>.
+                </p>
+                <button
+                  onClick={closeModal}
+                  className="mt-6 px-5 py-2 bg-vertiv text-white text-[12px] font-semibold rounded-lg hover:bg-vertiv-hover transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
+  )
+}
+
+function PlusIcon() {
+  return (
+    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+    </svg>
+  )
+}
+
+function XIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
   )
 }
