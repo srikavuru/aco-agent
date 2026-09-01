@@ -3,6 +3,7 @@ import AuditForm from './components/AuditForm'
 import AuditResult from './components/AuditResult'
 import AuditHistory from './components/AuditHistory'
 import BatchScrape from './components/BatchScrape'
+import JdFetch from './components/JdFetch'
 import ComplianceRules from './components/ComplianceRules'
 import WhatsNew from './components/WhatsNew'
 import ReportingDashboard from './components/ReportingDashboard'
@@ -123,6 +124,16 @@ export default function App() {
             Batch Scrape
           </button>
           <button
+            onClick={() => { setTab('get-jd'); warmup() }}
+            className={`px-5 py-2.5 text-[12px] font-semibold uppercase tracking-wider border-b-2 transition-colors ${
+              tab === 'get-jd'
+                ? 'border-vertiv text-vertiv'
+                : 'border-transparent text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            Get JD
+          </button>
+          <button
             onClick={() => setTab('rules')}
             className={`px-5 py-2.5 text-[12px] font-semibold uppercase tracking-wider border-b-2 transition-colors ${
               tab === 'rules'
@@ -186,6 +197,8 @@ export default function App() {
         )}
 
         {tab === 'batch' && <BatchScrape />}
+
+        {tab === 'get-jd' && <JdFetch />}
 
         {tab === 'rules' && <ComplianceRules />}
 

@@ -2,6 +2,55 @@ import SeverityBadge from './SeverityBadge'
 
 const TIMELINE = [
   {
+    date: 'September 1, 2026',
+    tag: 'NEW',
+    tagColor: 'bg-vertiv',
+    title: 'Get JD by Req Number',
+    subtitle: 'Pull any live posting as a Markdown file you can save next to that req\u2019s resumes.',
+    sections: [
+      {
+        heading: 'Req Lookup',
+        content: (
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {[
+              { label: 'Type a Req Number', desc: 'No URL hunting \u2014 enter 20265195 or REQ-20265195 and the tool finds the posting' },
+              { label: 'Batch Lookup', desc: 'Paste several req numbers at once and download every JD in one pass' },
+              { label: 'Search Fallback', desc: 'If the number is not the posting ID, the tool searches the careers site and flags that it matched by search' },
+              { label: 'Live Posting Link', desc: 'Every result links back to the posting so you can confirm you pulled the right req' },
+            ].map(item => (
+              <div key={item.label} className="flex items-start gap-2 bg-gray-50/80 rounded-lg px-3 py-2">
+                <div>
+                  <div className="text-[11px] font-semibold text-gray-700">{item.label}</div>
+                  <div className="text-[10px] text-gray-400">{item.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ),
+      },
+      {
+        heading: 'Screening-Ready Markdown',
+        content: (
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {[
+              { label: 'Verbatim JD', desc: 'The posted description is reproduced exactly \u2014 lists, headings, and bold preserved, nothing summarized or rewritten' },
+              { label: 'Metadata Header', desc: 'Req number, title, location, job family, posted date, source URL, and retrieval timestamp in YAML front matter' },
+              { label: 'Decision-Support Notice', desc: 'Every file states that screening judgment and every advance/reject call stay with the recruiter' },
+              { label: 'CLI Included', desc: 'scrapers/fetch_jd.py writes the same file straight into a folder from the terminal' },
+            ].map(item => (
+              <div key={item.label} className="flex items-start gap-2 bg-gray-50/80 rounded-lg px-3 py-2">
+                <div>
+                  <div className="text-[11px] font-semibold text-gray-700">{item.label}</div>
+                  <div className="text-[10px] text-gray-400">{item.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ),
+      },
+    ],
+  },
+  {
     date: 'July 4, 2026',
     tag: 'NEW',
     tagColor: 'bg-vertiv',

@@ -28,6 +28,13 @@ curl -X POST http://localhost:7071/api/audit -H "Content-Type: application/json"
 # Test ORC webhook (use sample payload)
 curl -X POST http://localhost:7071/api/orc-webhook -H "Content-Type: application/json" \
   -d @aco-agent/docs/orc-webhook-payload-sample.json
+
+# Fetch a JD by req number as Markdown (API)
+curl -X POST http://localhost:7071/api/jd-lookup -H "Content-Type: application/json" \
+  -d '{"req_number": "20265195", "generated_by": "user@vertiv.com"}'
+
+# Fetch a JD by req number as Markdown (CLI — writes the .md file)
+python scrapers/fetch_jd.py 20265195 --out ~/screening/req-20265195
 ```
 
 ## Architecture
@@ -37,6 +44,7 @@ curl -X POST http://localhost:7071/api/orc-webhook -H "Content-Type: application
 Two Azure Functions sharing a common engine:
 
 - **`POST /api/audit`** (`audit_jd/__init__.py`) — Direct audit. Accepts `job_description`, `region`, `role_type`, `req_number`, `posting_title`, `submitted_by`. Returns Audit Certificate JSON.
+- **`POST /api/jd-lookup`** (`jd_lookup/__init__.py`) — Req-number JD retrieval. Accepts `req_number` (with or without a `REQ-` prefix) and optional `generated_by`. Resolves the posting, then returns the job description as a screening-ready Markdown document plus a suggested filename. Retrieval and formatting only — it runs no audit and evaluates no one.
 - **`POST /api/orc-webhook`** (`orc_webhook/__init__.py`) — Oracle Recruiting Cloud integration. Accepts ORC's requisition-draft-saved webhook payload, strips HTML from `jobDescription`, maps `primaryLocation` → region code, maps `jobFamily` → role_type, extracts `requisitionNumber` → req_number, then runs the same audit pipeline.
 
 Shared modules at `aco-agent/shared/`:
@@ -44,11 +52,14 @@ Shared modules at `aco-agent/shared/`:
 1. **`rule_engine.py`** — Deterministic rule evaluator. Dispatches each rule from `data/rules/rules.json` to its match strategy (semantic, keyword_list, keyword, regex, computed). Returns findings sorted by severity.
 2. **`semantic_matcher.py`** — Wraps `all-MiniLM-L6-v2` via sentence-transformers for cosine similarity. Chunks long JDs into paragraphs for per-section matching. Lazy-loads model on first use. Falls back to token overlap if package unavailable.
 3. **`audit_certificate.py`** — Builds the structured Audit Certificate JSON (the legal record). Status logic: CRITICAL→BLOCKED, HIGH→REVIEW_REQUIRED, MEDIUM→ADVISORY, LOW→INFO, none→APPROVED. Version is `AUDIT_CERT_VERSION`. The `posting` object includes `req_number`.
-4. **`cosmos_writer.py`** — Persists certificates to CosmosDB with 7-year TTL. Partition key: `/posting/region`. Requires env vars: `COSMOS_ENDPOINT`, `COSMOS_KEY`, `COSMOS_DATABASE`, `COSMOS_CONTAINER`.
+4. **`req_lookup.py`** — Resolves a requisition number to a posting. Tries a direct detail fetch by candidate-experience Id first, then falls back to a keyword search across the public requisition list, matching on Id, requisition number, and title. Returns the posting dict shape used by `url_fetcher`, plus `job_description_html`, `posted_date`, and `matched_by`.
+5. **`jd_markdown.py`** — Renders a posting as Markdown: YAML front matter (req number, title, location, job family, posted date, source URL, retrieval timestamp), a usage note, and the **verbatim** job description. `html_to_markdown` converts Oracle's posting HTML while preserving lists, headings, and emphasis. Never summarizes, scores, or ranks.
+6. **`cosmos_writer.py`** — Persists certificates to CosmosDB with 7-year TTL. Partition key: `/posting/region`. Requires env vars: `COSMOS_ENDPOINT`, `COSMOS_KEY`, `COSMOS_DATABASE`, `COSMOS_CONTAINER`.
 
 ### Frontend — `recruiter-ui/`
 
-Vite + React + Tailwind app. Vite proxies `/api` to `localhost:7071`. Tabs: Audit, Batch Scrape, Rules, What's New, Reporting. Components:
+Vite + React + Tailwind app. Vite proxies `/api` to `localhost:7071`. Tabs: Audit, Batch Scrape, Get JD, Rules, What's New, Reporting. Components:
+- `JdFetch` — Get JD tab: req number(s) in, Markdown file(s) out (preview, copy, download, batch download)
 - `AuditForm` — JD paste textarea, posting title, req number, region/role selects
 - `AuditResult` — Status banner with severity count pills, req number display
 - `FindingCard` — Per-finding detail with severity badge, matched terms, legal citation, one-click remediation copy
@@ -79,6 +90,8 @@ Vite + React + Tailwind app. Vite proxies `/api` to `localhost:7071`. Tabs: Audi
 
 ## Design Constraints
 
+- JD retrieval reproduces the posted description verbatim. It must never summarize, rewrite, or infer requirements — the posted text is the legally relevant artifact and the screening input.
+- Nothing in this repo screens, scores, or ranks candidates. `jd_lookup` retrieves and formats a posting; the recruiter makes every advance/reject call. Do not add candidate-evaluation logic here.
 - Every finding must trace to an explicit `rule_id` — no black-box generation.
 - Semantic matching uses a published model with configurable per-rule thresholds for legal defensibility ("we used threshold 0.82 on all-MiniLM-L6-v2" is auditable).
 - The `legal_record` block in every certificate must always show `decision_authority: HUMAN_RECRUITER` and `tool_type: DECISION_SUPPORT`.
